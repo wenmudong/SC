@@ -15,10 +15,19 @@ const navItems = [
 export default function Navbar() {
   const pathname = usePathname();
   const [indicatorStyle, setIndicatorStyle] = useState({ width: 0, transform: "" });
+  const [isVisible, setIsVisible] = useState(false);
   const itemRefs = useRef<(HTMLAnchorElement | null)[]>([]);
 
   // 根据当前路径找到 activeIndex
   const activeIndex = navItems.findIndex((item) => item.href === pathname);
+
+  useEffect(() => {
+    // 延迟触发动画，让页面内容先渲染
+    const timer = setTimeout(() => {
+      setIsVisible(true);
+    }, 80);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     // 等待字体加载完成后再计算指示器位置
@@ -34,7 +43,7 @@ export default function Navbar() {
   }, [activeIndex]);
 
   return (
-    <nav className="sticky top-0 z-10 isolate flex items-center justify-center py-4 px-1 md:justify-between">
+    <nav className={`sticky top-0 z-10 isolate flex items-center justify-center py-4 px-1 md:justify-between ${isVisible ? "animate-slide-down" : "opacity-0"}`}>
       {/* 左侧胶囊容器 */}
       <div className="pointer-events-auto relative flex rounded-lg border border-neutral-200 bg-white/70 p-1 shadow-md backdrop-blur-md">
         {/* 滑动指示器 */}

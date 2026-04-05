@@ -6,7 +6,7 @@
   src: url("/fonts/fusion-pixel-12px-monospaced-latin.ttf.woff2") format("woff2");
   font-weight: normal;
   font-style: normal;
-  font-display: swap;
+  font-display: block;
 }
 
 @font-face {
@@ -14,7 +14,7 @@
   src: url("/fonts/fusion-pixel-12px-monospaced-zh_hans.ttf.woff2") format("woff2");
   font-weight: normal;
   font-style: normal;
-  font-display: swap;
+  font-display: block;
   unicode-range: U+4E00-9FFF, U+3000-303F, U+FF00-FFEF;
 }
 
@@ -105,6 +105,22 @@
 .animate-heart-beat {
   animation: heart-beat 1.2s ease-in-out infinite;
   display: inline-block;
+}
+
+/* Navbar slide-down 动画 */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-down {
+  animation: slideDown 400ms ease-out forwards;
 }
 
 @media (prefers-color-scheme: dark) {
