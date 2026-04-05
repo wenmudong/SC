@@ -16,6 +16,7 @@ export default function Navbar() {
   const pathname = usePathname();
   const [indicatorStyle, setIndicatorStyle] = useState({ width: 0, transform: "" });
   const [isVisible, setIsVisible] = useState(false);
+  const [navbarStyle, setNavbarStyle] = useState("blur");
   const itemRefs = useRef<(HTMLAnchorElement | null)[]>([]);
 
   // 根据当前路径找到 activeIndex
@@ -27,6 +28,26 @@ export default function Navbar() {
       setIsVisible(true);
     }, 80);
     return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    // 初始化：优先从 DOM 读取，或从 localStorage 读取，最后用默认值
+    const domStyle = document.documentElement.getAttribute("data-navbar-style");
+    if (domStyle) {
+      setNavbarStyle(domStyle);
+    } else {
+      try {
+        const stored = localStorage.getItem("system_configs");
+        if (stored) {
+          const configs = JSON.parse(stored);
+          if (configs.navbar_style) {
+            setNavbarStyle(configs.navbar_style);
+          }
+        }
+      } catch {
+        // ignore
+      }
+    }
   }, []);
 
   useEffect(() => {
@@ -42,10 +63,23 @@ export default function Navbar() {
     });
   }, [activeIndex]);
 
+  // 根据 navbar_style 动态设置样式
+  const getNavbarBgClass = () => {
+    switch (navbarStyle) {
+      case "solid":
+        return "bg-neutral-50/90";
+      case "transparent":
+        return "bg-transparent";
+      case "blur":
+      default:
+        return "bg-neutral-50/70 backdrop-blur-sm";
+    }
+  };
+
   return (
     <nav className={`sticky top-0 z-10 isolate flex items-center justify-center py-4 px-1 md:justify-between ${isVisible ? "animate-slide-down" : "opacity-0"}`}>
       {/* 左侧胶囊容器 */}
-      <div className="pointer-events-auto relative flex rounded-lg border border-neutral-200 bg-white/70 p-1 shadow-md backdrop-blur-md">
+      <div className={`pointer-events-auto relative flex rounded-lg border border-neutral-200 p-1 shadow-md ${getNavbarBgClass()}`}>
         {/* 滑动指示器 */}
         <div
           className="absolute left-0 -z-10 h-7 rounded bg-neutral-200 backdrop-blur transition-[width,transform] duration-150"

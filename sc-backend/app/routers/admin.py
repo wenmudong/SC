@@ -61,17 +61,21 @@ def create_config(config_data: SystemConfigCreate, current_user: User = Depends(
 
 @router.put("/config/{key}", response_model=SystemConfigResponse)
 def update_config(key: str, config_data: SystemConfigUpdate, current_user: User = Depends(require_admin)):
-    """更新系统配置"""
+    """更新系统配置（不存在则创建）"""
     with Session(engine) as session:
         config = session.exec(select(SystemConfig).where(SystemConfig.key == key)).first()
+
         if not config:
-            raise HTTPException(status_code=404, detail="配置不存在")
+            # 不存在则创建
+            config = SystemConfig(key=key, value=config_data.value)
+            session.add(config)
+        else:
+            # 存在则更新
+            config.value = config_data.value
+            if config_data.description is not None:
+                config.description = config_data.description
+            session.add(config)
 
-        config.value = config_data.value
-        if config_data.description is not None:
-            config.description = config_data.description
-
-        session.add(config)
         session.commit()
         session.refresh(config)
         return config

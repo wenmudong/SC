@@ -138,3 +138,12 @@ body {
   -webkit-font-smoothing: none;
   -moz-osx-font-smoothing: unset;
 }
+
+/* 系统配置字体 - 使用 html body 选择器 + !important 确保高优先级 */
+html body[data-font="FusionPixel"] {
+  font-family: "FusionPixel", var(--font-geist-sans) !important;
+}
+
+html body[data-font="var(--font-geist-sans)"] {
+  font-family: var(--font-geist-sans) !important;
+}
