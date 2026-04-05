@@ -1,6 +1,6 @@
 "use client";
 
-interface ProjectCardProps {
+interface ReadCardProps {
   id: string;
   title: string;
   description?: string;
@@ -28,7 +28,7 @@ const statusConfig = {
   },
 };
 
-export default function ProjectCard({
+export default function ReadCard({
   id,
   title,
   description,
@@ -36,7 +36,7 @@ export default function ProjectCard({
   coverUrl,
   linkUrl,
   category = "Project",
-}: ProjectCardProps) {
+}: ReadCardProps) {
   const config = statusConfig[status];
 
   return (

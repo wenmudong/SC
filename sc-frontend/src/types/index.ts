@@ -1,14 +1,3 @@
-// 项目类型
-export interface Project {
-  id: string;
-  title: string;
-  description: string;
-  status: "ACTIVE" | "COMPLETED" | "PLANNING";
-  coverUrl?: string;
-  linkUrl?: string;
-  category?: string;
-}
-
 // 用户类型
 export type UserRole = "blogger" | "user" | "admin";
 
@@ -73,6 +62,18 @@ export interface Comment {
 
 export interface CommentTree extends Comment {
   replies: CommentTree[];
+}
+
+// Hobby 类型
+export type { Hobby, TagColor, ImageLayout, Tag, ImageConfig, LinkConfig } from "./hobby";
+
+// 项目类型（Projects 页面卡片）
+export interface Project {
+  id: string;
+  title: string;
+  linkUrl?: string;
+  coverUrl?: string;
+  category?: string;
 }
 
 // 系统配置类型

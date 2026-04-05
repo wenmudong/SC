@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import PageHeader from "@/components/PageHeader";
-import BlogCard from "@/components/BlogCard";
+import BlogCard from "@/components/Cards/BlogCard";
 import EmptyState from "@/components/EmptyState";
 import Loading from "@/components/Loading";
 import { useAuth } from "@/contexts/AuthContext";
@@ -60,7 +60,7 @@ export default function BlogsPage() {
           {/* 第二行: posts 描述 + 分类筛选 */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <p className="text-lm text-neutral-400">
-              {filteredBlogs.length} posts · Wenmudong&apos;s thoughts and writings.
+              {filteredBlogs.length} {"posts"} · Wenmudong&apos;s thoughts and writings.
             </p>
             <div className="flex gap-2 flex-wrap">
               {BLOG_CATEGORIES.map(cat => (
