@@ -77,7 +77,7 @@ export default function FloatingAvatar() {
               href="/admin/config"
               className="block px-4 py-2 text-sm text-neutral-600 hover:bg-neutral-50"
             >
-              系统配置
+              Settings
             </Link>
           )}
           <Link
