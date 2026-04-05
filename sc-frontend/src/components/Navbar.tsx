@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSystemConfig } from "@/contexts/SystemConfigContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { useAuthModal } from "@/hooks/useAuthModal";
 
 const DEFAULT_NAVBAR_CONFIG = {
   style: "blur",
@@ -21,6 +23,8 @@ const DEFAULT_NAVBAR_CONFIG = {
 
 export default function Navbar() {
   const pathname = usePathname();
+  const { user } = useAuth();
+  const { openAuthModal } = useAuthModal();
   const { configs } = useSystemConfig();
   const [indicatorStyle, setIndicatorStyle] = useState({ width: 0, transform: "" });
   const [isVisible, setIsVisible] = useState(false);
@@ -94,6 +98,13 @@ export default function Navbar() {
             key={item.href}
             href={item.href}
             ref={(el) => { itemRefs.current[index] = el; }}
+            onClick={(e) => {
+              // 未登录且不是首页，点击弹出登录弹窗
+              if (!user && item.href !== "/") {
+                e.preventDefault();
+                openAuthModal();
+              }
+            }}
             className={`rounded py-1 px-2 text-sm tracking-tight transition-colors focus-visible:ring-4 focus-visible:ring-blue-200 ${
               index === activeIndex ? "text-neutral-900" : "text-neutral-400 hover:text-neutral-900"
             }`}

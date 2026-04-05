@@ -3,26 +3,35 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAuthModal } from "@/hooks/useAuthModal";
 import PageHeader from "@/components/PageHeader";
 import { uploadApi } from "@/services/api";
 
 export default function ProfilePage() {
   const { user, token, isLoading, updateUser, logout } = useAuth();
+  const { openAuthModal } = useAuthModal();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [message, setMessage] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const isLoggingOut = useRef(false);
 
   useEffect(() => {
-    if (!isLoading && !user) {
-      router.push("/auth/login");
+    if (!isLoading && !user && !isLoggingOut.current) {
+      router.push("/");
+      openAuthModal();
     }
     if (user) {
       setEmail(user.email);
     }
-  }, [user, isLoading, router]);
+  }, [user, isLoading, router, openAuthModal]);
+
+  const handleLogout = () => {
+    isLoggingOut.current = true;
+    logout();
+  };
 
   const handleAvatarClick = () => {
     fileInputRef.current?.click();
@@ -63,11 +72,6 @@ export default function ProfilePage() {
     } finally {
       setIsSaving(false);
     }
-  };
-
-  const handleLogout = () => {
-    logout();
-    router.push("/");
   };
 
   if (isLoading || !user) {

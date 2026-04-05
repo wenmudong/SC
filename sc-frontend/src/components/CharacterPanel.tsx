@@ -1,17 +1,5 @@
 import Image from "next/image";
 
-// 计算年龄（基于出生日期 2001-09-15）
-function calculateAge(birthDate: string): number {
-  const today = new Date();
-  const birth = new Date(birthDate);
-  let age = today.getFullYear() - birth.getFullYear();
-  const monthDiff = today.getMonth() - birth.getMonth();
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-    age--;
-  }
-  return age;
-}
-
 interface ProgressBarProps {
   label: string;
   name: string;
@@ -37,9 +25,12 @@ function ProgressBar({ label, name, value, max, color }: ProgressBarProps) {
   );
 }
 
-export default function CharacterPanel() {
-  const age = calculateAge("2001-09-15");
+// 静态常量，避免 hydration mismatch
+const STATIC_AGE = 24; // 2001-09-15 出生，到 2026-04-05 为 24 岁
+const HEIGHT = 173;
+const WEIGHT = 75;
 
+export default function CharacterPanel() {
   return (
     <div className="bg-neutral-50 rounded-lg p-6 flex flex-col items-center gap-6 transition-colors hover:bg-neutral-100">
       {/* 人物立绘 */}
@@ -48,6 +39,8 @@ export default function CharacterPanel() {
           src="/images/b.jpg"
           alt="人物立绘"
           fill
+          sizes="192px"
+          loading="eager"
           className="object-cover"
         />
       </div>
@@ -63,7 +56,7 @@ export default function CharacterPanel() {
         <ProgressBar
           label="LVL"
           name="年龄"
-          value={age}
+          value={STATIC_AGE}
           max={100}
           color="#22c55e"
         />
@@ -72,7 +65,7 @@ export default function CharacterPanel() {
         <ProgressBar
           label="HP"
           name="身高"
-          value={173}
+          value={HEIGHT}
           max={200}
           color="#ef4444"
         />
@@ -81,7 +74,7 @@ export default function CharacterPanel() {
         <ProgressBar
           label="MP"
           name="体重"
-          value={75}
+          value={WEIGHT}
           max={100}
           color="#3b82f6"
         />

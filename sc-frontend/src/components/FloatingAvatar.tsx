@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAuthModal } from "@/hooks/useAuthModal";
 import { useState, useRef, useEffect } from "react";
 
 export default function FloatingAvatar() {
   const { user, logout } = useAuth();
+  const { openAuthModal } = useAuthModal();
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -30,8 +32,8 @@ export default function FloatingAvatar() {
 
   if (!user) {
     return (
-      <Link
-        href="/auth/login"
+      <button
+        onClick={openAuthModal}
         className="fixed bottom-6 left-6 z-50 animate-breathe cursor-pointer"
       >
         <div className={avatarClass}>
@@ -39,7 +41,7 @@ export default function FloatingAvatar() {
             <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
           </svg>
         </div>
-      </Link>
+      </button>
     );
   }
 
@@ -87,10 +89,7 @@ export default function FloatingAvatar() {
             Profile
           </Link>
           <button
-            onClick={() => {
-              logout();
-              setShowMenu(false);
-            }}
+            onClick={logout}
             className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-neutral-50"
           >
             Logout

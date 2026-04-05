@@ -3,6 +3,9 @@ import type { User, Token, Blog, BlogListItem, CommentTree, SystemConfig } from 
 
 const API_BASE = "http://localhost:8000/api";
 
+// 401 错误事件名称
+export const AUTH_EXPIRED_EVENT = "auth:expired";
+
 interface RequestOptions {
   method?: string;
   body?: unknown;
@@ -25,6 +28,13 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
     headers,
     body: body ? JSON.stringify(body) : undefined,
   });
+
+  // 401 未授权，触发登录弹窗
+  if (res.status === 401) {
+    window.dispatchEvent(new CustomEvent(AUTH_EXPIRED_EVENT));
+    const error = await res.json().catch(() => ({ detail: "请先登录" }));
+    throw new Error(error.detail || "请先登录");
+  }
 
   if (!res.ok) {
     const error = await res.json().catch(() => ({ detail: "Request failed" }));
