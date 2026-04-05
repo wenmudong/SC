@@ -15,6 +15,12 @@ uv sync
 # 启动开发服务器
 uvicorn app.main:app --reload --port 8000
 
+# 运行测试（TDD）
+uv run pytest              # 运行所有测试
+uv run pytest tests/       # 运行指定目录
+uv run pytest -v           # 详细输出
+uv run pytest -k "test_name"  # 运行匹配用例
+
 # 运行数据库种子脚本（创建预置账号）
 python -m scripts.seed_db
 
@@ -48,10 +54,11 @@ app/
 │   └── auth.py      # JWT 认证中间件
 └── database.py     # 数据库连接
 
-scripts/
-├── seed_db.py      # 数据库种子脚本
-├── migrate_add_subtitle.py   # 添加 subtitle 列
-└── migrate_add_is_deleted.py # 添加软删除列
+tests/              # 测试目录（TDD）
+├── conftest.py     # pytest fixtures
+├── utils.py        # 测试辅助函数
+└── routers/        # 路由测试
+    └── test_health.py   # 健康检查测试
 
 data/               # SQLite 数据库文件目录
 public/             # 静态文件
@@ -190,6 +197,49 @@ public/             # 静态文件
 - 使用 `require_blogger` 装饰器限制博主权限
 - 博客使用软删除机制（`is_deleted` 标记），不会真正删除数据
 - 头像使用 base64 存储，直接存储 data URL 到数据库
+
+## TDD 开发流程
+
+新接口采用红→绿→重构 TDD 流程：
+
+```
+红(Red)     → 先写测试，预期接口行为
+绿(Green)   → 写最小代码让测试通过
+重构(Refactor) → 清理代码，保持测试通过
+```
+
+### TDD 流程
+
+1. **写测试**：在 `tests/routers/` 下创建测试文件
+   ```python
+   # tests/routers/test_blogs.py
+   @pytest.mark.asyncio
+   async def test_create_blog(client: AsyncClient):
+       response = await client.post("/api/blogs", json={...})
+       assert response.status_code == 201
+   ```
+
+2. **运行测试**（预期失败）：`uv run pytest tests/routers/test_blogs.py -v`
+
+3. **写接口**：在 `app/routers/blogs.py` 实现接口逻辑
+
+4. **运行测试**（预期通过）：`uv run pytest tests/routers/test_blogs.py -v`
+
+5. **重构**：如有需要，清理代码并确保测试通过
+
+### 测试内容
+
+| 测试类型 | 覆盖内容 |
+|---------|---------|
+| 路由测试 | 接口返回状态码、响应结构 |
+| 认证测试 | Token 有效性、无权限访问 |
+| 业务逻辑 | 博客创建/删除/查询 |
+| 边界情况 | 空输入、重复数据、超长内容 |
+
+### 数据库测试策略
+
+- 测试用独立 DB：每个测试用例用临时 SQLite 文件，测试结束删除
+- 或用 `:memory:` 内存数据库，速度更快
 
 ## 相关文档
 

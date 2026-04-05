@@ -38,14 +38,22 @@ sc-frontend/
 │   │   ├── hobbies/          # Hobbies 页 (/hobbies)
 │   │   └── tools/            # Tools 页 (/tools)
 │   ├── components/           # React 组件
+│   │   ├── Cards/            # 卡片组件
+│   │   │   ├── TextCard.tsx      # 文字卡片
+│   │   │   ├── ImageBgCard.tsx   # 背景图卡片
+│   │   │   ├── ImageSlideCard.tsx # 上移动画卡片
+│   │   │   ├── ImageFillCard.tsx # 填充图卡片
+│   │   │   ├── BlogCard.tsx      # 博客卡片
+│   │   │   ├── ProjectCard.tsx   # 项目卡片
+│   │   │   ├── HobbyCard.tsx     # 爱好卡片
+│   │   │   ├── ReadCard.tsx      # 阅读记录卡片
+│   │   │   └── ToolCard.tsx      # 工具卡片
 │   │   ├── Navbar.tsx        # 导航栏
 │   │   ├── FloatingAvatar.tsx # 左下角悬浮头像
 │   │   ├── PageHeader.tsx    # 页面标题
-│   │   ├── BlogCard.tsx      # 博客卡片
 │   │   ├── EmptyState.tsx    # 空状态组件
 │   │   ├── Toast.tsx         # 提示组件
 │   │   ├── ConfirmDialog.tsx # 确认弹窗
-│   │   ├── ProjectCard.tsx   # 项目卡片
 │   │   ├── ErrorBoundary.tsx # 错误边界
 │   │   └── Providers.tsx     # 全局 Provider 组合
 │   ├── contexts/             # React Context
@@ -377,11 +385,26 @@ export default function Component({ title, onClick }: ComponentProps) {
 | Navbar | `Navbar.tsx` | 导航栏，sticky 定位 |
 | FloatingAvatar | `FloatingAvatar.tsx` | 左下角悬浮头像，呼吸动画 |
 | PageHeader | `PageHeader.tsx` | 页面标题组件 |
-| BlogCard | `BlogCard.tsx` | 博客卡片 |
 | EmptyState | `EmptyState.tsx` | 空状态，彩虹渐变文字 |
 | Toast | `Toast.tsx` | 提示组件，顶部居中 |
 | ConfirmDialog | `ConfirmDialog.tsx` | 确认弹窗 |
 | Providers | `Providers.tsx` | 全局 Provider 组合 |
+| ErrorBoundary | `ErrorBoundary.tsx` | 错误边界 |
+| LoginModal | `LoginModal.tsx` | 登录弹窗 |
+
+### 6.3 卡片组件（放在 `src/components/Cards/`）
+
+| 组件 | 文件 | 用途 |
+|------|------|------|
+| TextCard | `TextCard.tsx` | 纯文字展示 |
+| ImageBgCard | `ImageBgCard.tsx` | 背景图 + 渐变遮罩 |
+| ImageSlideCard | `ImageSlideCard.tsx` | 图片上移动画 |
+| ImageFillCard | `ImageFillCard.tsx` | 封面图填满容器 |
+| BlogCard | `BlogCard.tsx` | 博客列表展示 |
+| ProjectCard | `ProjectCard.tsx` | 项目展示 |
+| HobbyCard | `HobbyCard.tsx` | 爱好入口（自动分发） |
+| ReadCard | `ReadCard.tsx` | 阅读记录卡片 |
+| ToolCard | `ToolCard.tsx` | 工具卡片 |
 
 ### 6.3 Navbar 组件
 

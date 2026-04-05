@@ -42,7 +42,7 @@ sc-backend/
 │   │   └── upload.py
 │   └── middleware/
 │       └── auth.py          # JWT 认证中间件
-├── scripts/                 # 数据库迁移脚本
+├── tests/                   # 测试目录（TDD）
 ├── data/                    # SQLite 数据库文件目录
 ├── public/                  # 静态文件
 └── pyproject.toml           # 项目依赖
@@ -418,13 +418,10 @@ def require_blogger(current_user: User = Depends(get_current_user)) -> User:
 
 ### 10.2 迁移脚本
 
-```bash
-# 添加新列
-python -m scripts.migrate_add_subtitle
-
-# 添加软删除列
-python -m scripts.migrate_add_is_deleted
-```
+> 暂无数据库迁移脚本需求，如有需要按以下方式添加：
+> ```bash
+> python -m scripts.migrate_add_xxx
+> ```
 
 ### 10.3 初始化
 
@@ -454,12 +451,11 @@ uv sync
 # 启动开发服务器
 uv run uvicorn app.main:app --reload --port 8000
 
-# 创建预置账号
-python -m scripts.seed_db
+# 运行测试（TDD）
+uv run pytest
 
-# 数据库迁移
-python -m scripts.migrate_add_subtitle
-python -m scripts.migrate_add_is_deleted
+# 创建预置账号（如有 seed_db 脚本）
+python -m scripts.seed_db
 ```
 
 ---

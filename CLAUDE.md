@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - 项目总览：`docs/SPEC.md`
 - 后端开发规范：`docs/BACKEND_DEV.md` — 后端开发规范（含代码规范、模型规范、路由规范等）
 - 前端开发规范：`docs/FRONTEND_DEV.md` — 前端开发规范（含 Next.js App Router、TypeScript、Tailwind CSS 等）
-- 后端详细文档：`sc-backend/README.md`
+- 后端开发规则：`sc-backend/CLAUDE.md`（后端开发规范 + TDD 流程）
 - 前端详细文档：`sc-frontend/README.md`
 - 前端开发规则：`sc-frontend/CLAUDE.md`（Next.js App Router 说明）
 
@@ -43,8 +43,7 @@ SuperCenter 个人网站，前后端分离架构。
 cd sc-backend
 uv sync                  # 安装/更新依赖
 uv run uvicorn app.main:app --reload --port 8000   # 启动开发服务器
-python -m scripts.migrate_add_subtitle   # 添加 subtitle 列
-python -m scripts.migrate_add_is_deleted  # 添加软删除列
+uv run pytest           # 运行测试（TDD）
 ```
 
 ### 前端
@@ -72,6 +71,7 @@ npm run build            # 生产构建
 - **数据库**：`app/database.py` — 引擎创建，`data/` 目录存放 `.db` 文件
 - **路由**：`app/routers/` — 各模块路由定义
 - **模型**：`app/models/` — SQLModel 模型定义数据库表结构
+- **测试**：`tests/` — TDD 测试目录
 
 ### 前后端通信
 

@@ -70,21 +70,20 @@ SuperCenter/
 │   │   ├── models/          # 数据模型
 │   │   │   ├── user.py       # 用户模型
 │   │   │   ├── blog.py       # 博客模型（含软删除）
-│   │   │   └── comment.py    # 评论模型
+│   │   │   ├── comment.py    # 评论模型
+│   │   │   └── system.py     # 系统配置模型
 │   │   ├── routers/          # API 路由
 │   │   │   ├── auth.py       # 认证路由
 │   │   │   ├── users.py      # 用户路由
 │   │   │   ├── blogs.py      # 博客路由
 │   │   │   ├── comments.py   # 评论路由
-│   │   │   └── upload.py     # 上传路由
+│   │   │   ├── upload.py     # 上传路由
+│   │   │   └── admin.py      # 管理路由
 │   │   ├── schemas/          # Pydantic Schemas
-│   │   └── middleware/        # 中间件
+│   │   └── middleware/       # 中间件
 │   │       └── auth.py       # JWT 认证中间件
+│   ├── tests/               # 测试目录（TDD）
 │   ├── data/                 # 数据库文件目录
-│   ├── scripts/              # 脚本
-│   │   ├── seed_db.py       # 数据库种子脚本
-│   │   ├── migrate_add_subtitle.py  # 添加 subtitle 列
-│   │   └── migrate_add_is_deleted.py # 添加软删除列
 │   └── pyproject.toml
 └── sc-frontend/              # 前端应用
     ├── src/
