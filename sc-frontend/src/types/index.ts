@@ -46,6 +46,7 @@ export interface BlogListItem {
   id: number;
   title: string;
   subtitle: string | null;
+  content: string;  // 正文内容
   author_id: number;
   author_username: string;
   category: BlogCategory;

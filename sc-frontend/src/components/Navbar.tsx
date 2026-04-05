@@ -3,24 +3,48 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSystemConfig } from "@/contexts/SystemConfigContext";
 
-const navItems = [
-  { label: "Wenmudong", href: "/" },
-  { label: "Blogs", href: "/blogs" },
-  { label: "Projects", href: "/projects" },
-  { label: "Hobbies", href: "/hobbies" },
-  { label: "Tools", href: "/tools" },
-];
+const DEFAULT_NAVBAR_CONFIG = {
+  style: "blur",
+  nav_items: [
+    { label: "Wenmudong", href: "/", visible: true },
+    { label: "Blogs", href: "/blogs", visible: true },
+    { label: "Projects", href: "/projects", visible: true },
+    { label: "Hobbies", href: "/hobbies", visible: true },
+    { label: "Tools", href: "/tools", visible: true },
+  ],
+  right_links: [
+    { label: "Github", href: "https://github.com/wenmudong", visible: true },
+  ],
+};
 
 export default function Navbar() {
   const pathname = usePathname();
+  const { configs } = useSystemConfig();
   const [indicatorStyle, setIndicatorStyle] = useState({ width: 0, transform: "" });
   const [isVisible, setIsVisible] = useState(false);
-  const [navbarStyle, setNavbarStyle] = useState("blur");
   const itemRefs = useRef<(HTMLAnchorElement | null)[]>([]);
 
+  // 从配置读取导航栏配置
+  const navbarConfig = (() => {
+    try {
+      const stored = configs.get("navbar_config");
+      if (stored) {
+        return JSON.parse(stored);
+      }
+    } catch {
+      // ignore
+    }
+    return DEFAULT_NAVBAR_CONFIG;
+  })();
+
+  const navStyle = navbarConfig.style || DEFAULT_NAVBAR_CONFIG.style;
+  const navItems = (navbarConfig.nav_items || DEFAULT_NAVBAR_CONFIG.nav_items).filter((item: { visible?: boolean }) => item.visible !== false);
+  const rightLinks = (navbarConfig.right_links || DEFAULT_NAVBAR_CONFIG.right_links).filter((link: { visible?: boolean }) => link.visible !== false);
+
   // 根据当前路径找到 activeIndex
-  const activeIndex = navItems.findIndex((item) => item.href === pathname);
+  const activeIndex = navItems.findIndex((item: { href: string }) => item.href === pathname);
 
   useEffect(() => {
     // 延迟触发动画，让页面内容先渲染
@@ -28,26 +52,6 @@ export default function Navbar() {
       setIsVisible(true);
     }, 80);
     return () => clearTimeout(timer);
-  }, []);
-
-  useEffect(() => {
-    // 初始化：优先从 DOM 读取，或从 localStorage 读取，最后用默认值
-    const domStyle = document.documentElement.getAttribute("data-navbar-style");
-    if (domStyle) {
-      setNavbarStyle(domStyle);
-    } else {
-      try {
-        const stored = localStorage.getItem("system_configs");
-        if (stored) {
-          const configs = JSON.parse(stored);
-          if (configs.navbar_style) {
-            setNavbarStyle(configs.navbar_style);
-          }
-        }
-      } catch {
-        // ignore
-      }
-    }
   }, []);
 
   useEffect(() => {
@@ -63,9 +67,9 @@ export default function Navbar() {
     });
   }, [activeIndex]);
 
-  // 根据 navbar_style 动态设置样式
+  // 根据导航栏样式返回背景类
   const getNavbarBgClass = () => {
-    switch (navbarStyle) {
+    switch (navStyle) {
       case "solid":
         return "bg-neutral-50/90";
       case "transparent":
@@ -100,15 +104,18 @@ export default function Navbar() {
       </div>
 
       {/* 右侧链接 */}
-      <div className="hidden md:flex pointer-events-auto">
-        <a
-          href="https://github.com/wenmudong"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="rounded py-1 px-2 text-sm tracking-tight text-neutral-400 decoration-wavy underline-offset-4 focus-visible:ring-4 focus-visible:ring-blue-200 focus:text-neutral-900 cursor-alias transition-colors hover:text-neutral-900 hover:underline"
-        >
-          Github
-        </a>
+      <div className="hidden md:flex pointer-events-auto gap-2">
+        {rightLinks.map((link, index) => (
+          <a
+            key={index}
+            href={link.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="rounded py-1 px-2 text-sm tracking-tight text-neutral-400 decoration-wavy underline-offset-4 focus-visible:ring-4 focus-visible:ring-blue-200 focus:text-neutral-900 cursor-alias transition-colors hover:text-neutral-900 hover:underline"
+          >
+            {link.label}
+          </a>
+        ))}
       </div>
     </nav>
   );

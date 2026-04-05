@@ -44,6 +44,7 @@ class BlogListResponse(BaseModel):
     id: int
     title: str
     subtitle: Optional[str] = None
+    content: str = ""  # 正文内容，用于列表展示
     author_id: int
     author_username: str
     category: str = "Diary"

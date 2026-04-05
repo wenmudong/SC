@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/Toast";
 import ConfirmDialog from "@/components/ConfirmDialog";
@@ -328,7 +329,7 @@ export default function BlogDetailPage() {
         {/* Blog Content */}
         <article className="rounded-lg border border-neutral-200 bg-white/70 p-6">
           <article className="prose max-w-none">
-            <ReactMarkdown>{blog.content}</ReactMarkdown>
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{blog.content}</ReactMarkdown>
           </article>
 
           {user?.role === "blogger" && (

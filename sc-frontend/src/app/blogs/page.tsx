@@ -59,7 +59,7 @@ export default function BlogsPage() {
           </div>
           {/* 第二行: posts 描述 + 分类筛选 */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-            <p className="text-sm text-neutral-400">
+            <p className="text-lm text-neutral-400">
               {filteredBlogs.length} posts · Wenmudong&apos;s thoughts and writings.
             </p>
             <div className="flex gap-2 flex-wrap">

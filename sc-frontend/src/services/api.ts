@@ -78,17 +78,17 @@ export const blogApi = {
   get: (id: number) =>
     request<Blog>(`/blogs/${id}`),
 
-  create: (token: string, title: string, subtitle: string, content: string, category: string = "Diary") =>
+  create: (token: string, title: string, subtitle: string | undefined, content: string, category: string = "Diary") =>
     request<Blog>("/blogs", {
       method: "POST",
-      body: { title, subtitle, content, category },
+      body: { title, subtitle: subtitle || null, content, category },
       token,
     }),
 
-  update: (token: string, id: number, title: string, subtitle: string, content: string, category: string) =>
+  update: (token: string, id: number, title: string, subtitle: string | undefined, content: string, category: string) =>
     request<Blog>(`/blogs/${id}`, {
       method: "PUT",
-      body: { title, subtitle, content, category },
+      body: { title, subtitle: subtitle || null, content, category },
       token,
     }),
 

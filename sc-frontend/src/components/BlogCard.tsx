@@ -71,11 +71,9 @@ export default function BlogCard({
             <span className="mt-2 mb-4 block text-sm tracking-tight text-neutral-400">
               {formattedDate}
             </span>
-            {blog.subtitle && (
-              <p className="leading-relaxed tracking-tight text-neutral-700 line-clamp-3 md:line-clamp-4">
-                {blog.subtitle}
-              </p>
-            )}
+            <p className="leading-relaxed tracking-tight text-neutral-700 line-clamp-4">
+              {blog.subtitle || blog.content}
+            </p>
           </Link>
         </div>
       </div>

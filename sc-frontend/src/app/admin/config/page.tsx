@@ -1,43 +1,54 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSystemConfig } from "@/contexts/SystemConfigContext";
 import { useToast } from "@/components/Toast";
 import GradientText from "@/components/GradientText";
 
-const CONFIG_DEFINITIONS = [
-  {
-    key: "global_font",
-    label: "全局字体",
-    description: "设置网站使用的字体",
-    type: "select",
-    options: [
-      { value: "FusionPixel", label: "像素字体 (FusionPixel)" },
-      { value: "var(--font-geist-sans)", label: "系统字体 (Geist)" },
-    ],
-  },
-  {
-    key: "navbar_style",
-    label: "导航栏样式",
-    description: "设置导航栏的显示样式",
-    type: "select",
-    options: [
-      { value: "transparent", label: "透明" },
-      { value: "solid", label: "实色" },
-      { value: "blur", label: "毛玻璃" },
-    ],
-  },
-];
+interface NavItem {
+  label: string;
+  href: string;
+  visible: boolean;
+}
+
+interface RightLink {
+  label: string;
+  href: string;
+  visible: boolean;
+}
+
+interface NavbarConfig {
+  style: string;
+  nav_items: NavItem[];
+  right_links: RightLink[];
+}
+
+const DEFAULT_NAVBAR_CONFIG: NavbarConfig = {
+  style: "blur",
+  nav_items: [
+    { label: "Wenmudong", href: "/", visible: true },
+    { label: "Blogs", href: "/blogs", visible: true },
+    { label: "Projects", href: "/projects", visible: true },
+    { label: "Hobbies", href: "/hobbies", visible: true },
+    { label: "Tools", href: "/tools", visible: true },
+  ],
+  right_links: [
+    { label: "Github", href: "https://github.com/wenmudong", visible: true },
+  ],
+};
 
 export default function AdminConfigPage() {
   const router = useRouter();
   const { user, isLoading: authLoading } = useAuth();
-  const { configs, updateConfig, saveConfig, isLoading } = useSystemConfig();
+  const { configs, saveConfig, isLoading } = useSystemConfig();
   const { showToast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
-  const [tempValues, setTempValues] = useState<Record<string, string>>({});
+  const [tempNavbarConfig, setTempNavbarConfig] = useState<NavbarConfig>(DEFAULT_NAVBAR_CONFIG);
+  const [tempFont, setTempFont] = useState("");
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const saveButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -47,39 +58,195 @@ export default function AdminConfigPage() {
     }
   }, [user, authLoading, router]);
 
-  // 临时更新（不保存）
-  const handleChange = (key: string, value: string) => {
-    setTempValues((prev) => ({ ...prev, [key]: value }));
-    updateConfig(key, value);
+  // 初始化临时值
+  useEffect(() => {
+    const storedNavbarConfig = configs.get("navbar_config");
+    if (storedNavbarConfig) {
+      try {
+        const parsed = JSON.parse(storedNavbarConfig);
+        const configWithVisibility: NavbarConfig = {
+          ...parsed,
+          nav_items: parsed.nav_items.map((item: NavItem) => ({
+            ...item,
+            visible: item.visible !== undefined ? item.visible : true,
+          })),
+          right_links: parsed.right_links.map((link: RightLink) => ({
+            ...link,
+            visible: link.visible !== undefined ? link.visible : true,
+          })),
+        };
+        setTempNavbarConfig(configWithVisibility);
+      } catch {
+        setTempNavbarConfig(DEFAULT_NAVBAR_CONFIG);
+      }
+    }
+
+    const storedFont = configs.get("global_font");
+    if (storedFont) {
+      setTempFont(storedFont);
+    }
+  }, [configs]);
+
+  // 检查是否至少有一个可见的导航项
+  const hasVisibleNavItem = () => {
+    return tempNavbarConfig.nav_items.some((item) => item.visible);
   };
 
-  // 保存所有有变化的配置
+  // 更新导航项
+  const updateNavItem = (index: number, field: keyof NavItem, value: string | boolean) => {
+    setTempNavbarConfig((prev) => {
+      const newConfig = { ...prev };
+      newConfig.nav_items = [...prev.nav_items];
+      newConfig.nav_items[index] = { ...prev.nav_items[index], [field]: value };
+      return newConfig;
+    });
+  };
+
+  // 添加导航项
+  const addNavItem = () => {
+    setTempNavbarConfig((prev) => ({
+      ...prev,
+      nav_items: [...prev.nav_items, { label: "New", href: "/", visible: true }],
+    }));
+  };
+
+  // 删除导航项（至少保留一个）
+  const removeNavItem = (index: number) => {
+    if (tempNavbarConfig.nav_items.length <= 1) {
+      showToast("至少需要保留一个导航项", "error");
+      return;
+    }
+    setTempNavbarConfig((prev) => {
+      const newConfig = { ...prev };
+      newConfig.nav_items = prev.nav_items.filter((_, i) => i !== index);
+      return newConfig;
+    });
+  };
+
+  // 切换导航项显示/隐藏（至少保留一个可见）
+  const toggleNavItemVisible = (index: number) => {
+    const item = tempNavbarConfig.nav_items[index];
+    if (item.visible && !hasVisibleNavItem()) {
+      showToast("至少需要保留一个可见的导航项", "error");
+      return;
+    }
+    updateNavItem(index, "visible", !item.visible);
+  };
+
+  // 拖拽导航项
+  const handleNavItemDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleNavItemDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === index) return;
+
+    setTempNavbarConfig((prev) => {
+      const newConfig = { ...prev };
+      const items = [...prev.nav_items];
+      const draggedItem = items[draggedIndex];
+      items.splice(draggedIndex, 1);
+      items.splice(index, 0, draggedItem);
+      newConfig.nav_items = items;
+      return newConfig;
+    });
+    setDraggedIndex(index);
+  };
+
+  const handleNavItemDragEnd = () => {
+    setDraggedIndex(null);
+  };
+
+  // 更新右侧链接
+  const updateRightLink = (index: number, field: keyof RightLink, value: string | boolean) => {
+    setTempNavbarConfig((prev) => {
+      const newConfig = { ...prev };
+      newConfig.right_links = [...prev.right_links];
+      newConfig.right_links[index] = { ...prev.right_links[index], [field]: value };
+      return newConfig;
+    });
+  };
+
+  // 添加右侧链接
+  const addRightLink = () => {
+    setTempNavbarConfig((prev) => ({
+      ...prev,
+      right_links: [...prev.right_links, { label: "New", href: "https://", visible: true }],
+    }));
+  };
+
+  // 删除右侧链接
+  const removeRightLink = (index: number) => {
+    setTempNavbarConfig((prev) => {
+      const newConfig = { ...prev };
+      newConfig.right_links = prev.right_links.filter((_, i) => i !== index);
+      return newConfig;
+    });
+  };
+
+  // 切换右侧链接显示/隐藏
+  const toggleRightLinkVisible = (index: number) => {
+    const link = tempNavbarConfig.right_links[index];
+    updateRightLink(index, "visible", !link.visible);
+  };
+
+  // 拖拽右侧链接
+  const handleRightLinkDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleRightLinkDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === index) return;
+
+    setTempNavbarConfig((prev) => {
+      const newConfig = { ...prev };
+      const links = [...prev.right_links];
+      const draggedLink = links[draggedIndex];
+      links.splice(draggedIndex, 1);
+      links.splice(index, 0, draggedLink);
+      newConfig.right_links = links;
+      return newConfig;
+    });
+    setDraggedIndex(index);
+  };
+
+  const handleRightLinkDragEnd = () => {
+    setDraggedIndex(null);
+  };
+
+  // 保存所有配置
   const handleSaveAll = async () => {
-    const changedKeys = Object.keys(tempValues).filter((key) => tempValues[key] !== "");
-    if (changedKeys.length === 0) {
-      showToast("没有需要保存的配置", "info");
+    if (!hasVisibleNavItem()) {
+      showToast("至少需要保留一个可见的导航项", "error");
       return;
     }
 
     setIsSaving(true);
 
-    for (const key of changedKeys) {
-      const value = tempValues[key];
-      try {
-        await saveConfig(key, value);
-      } catch {
-        showToast("保存失败", "error");
-        setIsSaving(false);
-        return;
+    try {
+      if (tempFont && tempFont !== configs.get("global_font")) {
+        await saveConfig("global_font", tempFont);
       }
-    }
 
-    showToast("保存成功", "success");
-    setTempValues({});
-    setIsSaving(false);
+      const navbarConfigStr = JSON.stringify(tempNavbarConfig);
+      if (navbarConfigStr !== configs.get("navbar_config")) {
+        await saveConfig("navbar_config", navbarConfigStr);
+      }
+
+      showToast("保存成功", "success");
+    } catch {
+      showToast("保存失败", "error");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const hasChanges = Object.keys(tempValues).length > 0;
+  const hasChanges = tempFont !== configs.get("global_font") ||
+    JSON.stringify(tempNavbarConfig) !== configs.get("navbar_config");
 
   if (authLoading || isLoading) {
     return (
@@ -96,8 +263,8 @@ export default function AdminConfigPage() {
   return (
     <div className="min-h-screen px-4 py-8">
       <div className="mx-auto max-w-2xl">
-        {/* 页面标题 */}
-        <div className="mb-8 flex items-center justify-between">
+        {/* Sticky 页面标题 - 固定在导航栏下方 */}
+        <div className="sticky top-16 z-50 flex items-center justify-between bg-white/95 backdrop-blur-md py-4">
           <div>
             <h1 className="font-sans text-4xl font-extralight text-neutral-900">
               <GradientText>系统配置</GradientText>
@@ -105,6 +272,7 @@ export default function AdminConfigPage() {
             <p className="mt-2 text-sm text-neutral-500">配置网站的全局设置</p>
           </div>
           <button
+            ref={saveButtonRef}
             onClick={handleSaveAll}
             disabled={isSaving || !hasChanges}
             className="rounded bg-neutral-900 px-4 py-2 text-sm text-white transition-colors hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-50"
@@ -114,81 +282,166 @@ export default function AdminConfigPage() {
         </div>
 
         {/* 配置列表 */}
-        <div className="space-y-6">
-          {CONFIG_DEFINITIONS.map((def) => {
-            const currentValue = tempValues[def.key] ?? configs.get(def.key) ?? "";
+        <div className="space-y-6 pt-4">
+          {/* 全局字体 */}
+          <div className="rounded-lg border border-neutral-200 bg-white/50 p-4 backdrop-blur-sm">
+            <div className="mb-2 flex items-center justify-between">
+              <label className="text-sm font-medium text-neutral-900">全局字体</label>
+              <span className="text-xs text-neutral-400">global_font</span>
+            </div>
+            <p className="mb-3 text-xs text-neutral-500">设置网站使用的字体</p>
+            <select
+              value={tempFont}
+              onChange={(e) => setTempFont(e.target.value)}
+              className="w-full rounded border border-neutral-300 bg-white px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
+            >
+              <option value="FusionPixel">像素字体 (FusionPixel)</option>
+              <option value="var(--font-geist-sans)">系统字体 (Geist)</option>
+            </select>
+          </div>
 
-            return (
-              <div
-                key={def.key}
-                className="rounded-lg border border-neutral-200 bg-white/50 p-4 backdrop-blur-sm"
+          {/* 导航栏配置 */}
+          <div className="rounded-lg border border-neutral-200 bg-white/50 p-4 backdrop-blur-sm">
+            <div className="mb-2 flex items-center justify-between">
+              <label className="text-sm font-medium text-neutral-900">导航栏配置</label>
+              <span className="text-xs text-neutral-400">navbar_config</span>
+            </div>
+            <p className="mb-3 text-xs text-neutral-500">设置导航栏的样式、导航项和链接</p>
+
+            {/* 导航栏样式 */}
+            <div className="mb-4">
+              <span className="mb-2 block text-xs font-medium text-neutral-700">导航栏样式</span>
+              <select
+                value={tempNavbarConfig.style}
+                onChange={(e) => setTempNavbarConfig((prev) => ({ ...prev, style: e.target.value }))}
+                className="w-full rounded border border-neutral-300 bg-white px-3 py-2 text-sm"
               >
-                <div className="mb-2 flex items-center justify-between">
-                  <label className="text-sm font-medium text-neutral-900">
-                    {def.label}
-                  </label>
-                  <span className="text-xs text-neutral-400">{def.key}</span>
-                </div>
+                <option value="blur">毛玻璃</option>
+                <option value="solid">实色</option>
+                <option value="transparent">透明</option>
+              </select>
+            </div>
 
-                {def.description && (
-                  <p className="mb-3 text-xs text-neutral-500">{def.description}</p>
-                )}
-
-                {def.type === "select" && (
-                  <select
-                    value={currentValue}
-                    onChange={(e) => handleChange(def.key, e.target.value)}
-                    className="w-full rounded border border-neutral-300 bg-white px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
-                  >
-                    {def.options?.map((opt) => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
-                )}
-
-                {def.type === "color" && (
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="color"
-                      value={currentValue || "#ffffff"}
-                      onChange={(e) => handleChange(def.key, e.target.value)}
-                      className="h-10 w-20 cursor-pointer rounded border border-neutral-300"
-                    />
-                    <span className="text-sm text-neutral-600">{currentValue || "#ffffff"}</span>
-                  </div>
-                )}
-
-                {def.type === "text" && (
-                  <input
-                    type="text"
-                    value={currentValue}
-                    onChange={(e) => handleChange(def.key, e.target.value)}
-                    placeholder={`输入${def.label}`}
-                    className="w-full rounded border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
-                  />
-                )}
-
-                {def.type === "textarea" && (
-                  <textarea
-                    value={currentValue}
-                    onChange={(e) => handleChange(def.key, e.target.value)}
-                    placeholder={`输入${def.label}`}
-                    rows={3}
-                    className="w-full rounded border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
-                  />
-                )}
+            {/* 导航项 */}
+            <div className="mb-4">
+              <div className="mb-2 flex items-center justify-between">
+                <span className="text-xs font-medium text-neutral-700">导航项</span>
+                <button
+                  onClick={addNavItem}
+                  className="text-xs text-blue-500 hover:underline"
+                >
+                  + 添加
+                </button>
               </div>
-            );
-          })}
+              <div className="space-y-2">
+                {tempNavbarConfig.nav_items.map((item, index) => (
+                  <div
+                    key={index}
+                    draggable
+                    onDragStart={(e) => handleNavItemDragStart(e, index)}
+                    onDragOver={(e) => handleNavItemDragOver(e, index)}
+                    onDragEnd={handleNavItemDragEnd}
+                    className={`flex items-center gap-2 rounded border bg-white p-2 cursor-move ${
+                      draggedIndex === index ? "border-blue-400 opacity-50" : "border-neutral-200"
+                    }`}
+                  >
+                    {/* 可见切换 - 绿色=显示，红色=隐藏 */}
+                    <button
+                      onClick={() => toggleNavItemVisible(index)}
+                      className={`text-xs px-1 ${item.visible ? "text-green-500" : "text-red-500"}`}
+                      title={item.visible ? "显示中 - 点击隐藏" : "已隐藏 - 点击显示"}
+                    >
+                      {item.visible ? "●" : "○"}
+                    </button>
+                    <input
+                      type="text"
+                      value={item.label}
+                      onChange={(e) => updateNavItem(index, "label", e.target.value)}
+                      placeholder="文案"
+                      className="flex-1 rounded border border-neutral-300 px-2 py-1 text-sm"
+                    />
+                    <input
+                      type="text"
+                      value={item.href}
+                      onChange={(e) => updateNavItem(index, "href", e.target.value)}
+                      placeholder="/path"
+                      className="flex-1 rounded border border-neutral-300 px-2 py-1 text-sm"
+                    />
+                    <button
+                      onClick={() => removeNavItem(index)}
+                      disabled={tempNavbarConfig.nav_items.length <= 1}
+                      className="text-xs text-red-500 hover:underline disabled:opacity-30"
+                    >
+                      删除
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 右侧链接 */}
+            <div>
+              <div className="mb-2 flex items-center justify-between">
+                <span className="text-xs font-medium text-neutral-700">右侧链接</span>
+                <button
+                  onClick={addRightLink}
+                  className="text-xs text-blue-500 hover:underline"
+                >
+                  + 添加
+                </button>
+              </div>
+              <div className="space-y-2">
+                {tempNavbarConfig.right_links.map((link, index) => (
+                  <div
+                    key={index}
+                    draggable
+                    onDragStart={(e) => handleRightLinkDragStart(e, index)}
+                    onDragOver={(e) => handleRightLinkDragOver(e, index)}
+                    onDragEnd={handleRightLinkDragEnd}
+                    className={`flex items-center gap-2 rounded border bg-white p-2 cursor-move ${
+                      draggedIndex === index ? "border-blue-400 opacity-50" : "border-neutral-200"
+                    }`}
+                  >
+                    {/* 可见切换 - 绿色=显示，红色=隐藏 */}
+                    <button
+                      onClick={() => toggleRightLinkVisible(index)}
+                      className={`text-xs px-1 ${link.visible ? "text-green-500" : "text-red-500"}`}
+                      title={link.visible ? "显示中 - 点击隐藏" : "已隐藏 - 点击显示"}
+                    >
+                      {link.visible ? "●" : "○"}
+                    </button>
+                    <input
+                      type="text"
+                      value={link.label}
+                      onChange={(e) => updateRightLink(index, "label", e.target.value)}
+                      placeholder="文案"
+                      className="flex-1 rounded border border-neutral-300 px-2 py-1 text-sm"
+                    />
+                    <input
+                      type="text"
+                      value={link.href}
+                      onChange={(e) => updateRightLink(index, "href", e.target.value)}
+                      placeholder="https://"
+                      className="flex-1 rounded border border-neutral-300 px-2 py-1 text-sm"
+                    />
+                    <button
+                      onClick={() => removeRightLink(index)}
+                      className="text-xs text-red-500 hover:underline"
+                    >
+                      删除
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* 提示信息 */}
         <div className="mt-8 rounded-lg border border-neutral-200 bg-white/30 p-4 backdrop-blur-sm">
           <p className="text-xs text-neutral-500">
             <span className="font-medium text-neutral-700">提示：</span>
-            修改配置后点击&quot;保存全部&quot;按钮才会生效。
+            拖拽可调整顺序，● 绿色=显示，○ 红色=隐藏。至少保留一个可见导航项。
           </p>
         </div>
       </div>

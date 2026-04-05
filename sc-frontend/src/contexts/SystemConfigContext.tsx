@@ -19,16 +19,11 @@ const CONFIG_STORAGE_KEY = "system_configs";
 
 // 应用配置到页面
 function applyConfig(key: string, value: string) {
-  const html = document.documentElement;
-
   switch (key) {
     case "global_font":
       document.body.style.setProperty("font-family", value, "important");
       document.body.style.setProperty("--font-sans", value, "important");
       document.body.setAttribute("data-font", value);
-      break;
-    case "navbar_style":
-      html.setAttribute("data-navbar-style", value);
       break;
   }
 }
