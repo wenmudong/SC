@@ -1,7 +1,10 @@
 // 后端 API 服务层
 import type { User, Token, Blog, BlogListItem, CommentTree, SystemConfig } from "@/types";
 
-const API_BASE = "http://localhost:8000/api";
+// 根据当前访问地址动态推断后端地址，支持 localhost 和局域网 IP 访问
+const API_BASE = typeof window !== 'undefined'
+  ? `${window.location.protocol}//${window.location.hostname}:8000/api`
+  : "http://localhost:8000/api";
 
 // 401 错误事件名称
 export const AUTH_EXPIRED_EVENT = "auth:expired";

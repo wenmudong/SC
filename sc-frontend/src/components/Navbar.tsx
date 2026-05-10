@@ -27,7 +27,6 @@ export default function Navbar() {
   const { openAuthModal } = useAuthModal();
   const { configs } = useSystemConfig();
   const [indicatorStyle, setIndicatorStyle] = useState({ width: 0, transform: "" });
-  const [isVisible, setIsVisible] = useState(false);
   const itemRefs = useRef<(HTMLAnchorElement | null)[]>([]);
 
   // 从配置读取导航栏配置
@@ -49,14 +48,6 @@ export default function Navbar() {
 
   // 根据当前路径找到 activeIndex
   const activeIndex = navItems.findIndex((item: { href: string }) => item.href === pathname);
-
-  useEffect(() => {
-    // 延迟触发动画，让页面内容先渲染
-    const timer = setTimeout(() => {
-      setIsVisible(true);
-    }, 80);
-    return () => clearTimeout(timer);
-  }, []);
 
   useEffect(() => {
     // 等待字体加载完成后再计算指示器位置
@@ -85,7 +76,7 @@ export default function Navbar() {
   };
 
   return (
-    <nav className={`sticky top-0 z-10 isolate flex items-center justify-center py-4 px-1 md:justify-between ${isVisible ? "animate-slide-down" : "opacity-0"}`}>
+    <nav className={`sticky top-0 z-10 isolate flex items-center justify-center py-4 px-1 md:justify-between animate-slide-down`}>
       {/* 左侧胶囊容器 */}
       <div className={`pointer-events-auto relative flex rounded-lg border border-neutral-200 p-1 shadow-md ${getNavbarBgClass()}`}>
         {/* 滑动指示器 */}

@@ -1,4 +1,5 @@
 import HobbyCard from "@/components/Cards/HobbyCard";
+import AuthGuard from "@/components/AuthGuard";
 import type { Hobby } from "@/types";
 
 // TODO: 后端对接后替换为 API 调用
@@ -137,6 +138,7 @@ const mockHobbies: Hobby[] = [
 
 export default function Hobbies() {
   return (
+    <AuthGuard>
     <>
       {/* 固定头部区域 */}
       <div className="sticky top-0 z-10 bg-white/90 backdrop-blur-sm">
@@ -161,5 +163,6 @@ export default function Hobbies() {
         ))}
       </div>
     </>
+    </AuthGuard>
   );
 }

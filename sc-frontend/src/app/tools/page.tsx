@@ -3,6 +3,7 @@
 import { useRef, useState, useEffect } from "react";
 import TextCard from "@/components/Cards/TextCard";
 import EmptyState from "@/components/EmptyState";
+import { useAuthGuard } from "@/hooks/useAuthGuard";
 
 interface Tool {
   id: string;
@@ -87,6 +88,7 @@ const TOOLS: Tool[] = [
 ];
 
 export default function ToolsPage() {
+  const { isReady } = useAuthGuard();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
@@ -127,6 +129,8 @@ export default function ToolsPage() {
     window.addEventListener("mouseup", handleGlobalMouseUp);
     return () => window.removeEventListener("mouseup", handleGlobalMouseUp);
   }, []);
+
+  if (!isReady) return null;
 
   return (
     <>

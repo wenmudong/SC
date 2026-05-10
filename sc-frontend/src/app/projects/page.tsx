@@ -1,4 +1,5 @@
 import ProjectCard from "@/components/Cards/ProjectCard";
+import AuthGuard from "@/components/AuthGuard";
 import type { Project } from "@/types";
 
 // TODO: 后端对接后替换为 API 调用
@@ -35,6 +36,7 @@ const mockProjects: Project[] = [
 
 export default function Projects() {
   return (
+    <AuthGuard>
     <>
       {/* 固定头部区域 */}
       <div className="sticky top-0 z-10 bg-white/90 backdrop-blur-sm">
@@ -63,5 +65,6 @@ export default function Projects() {
         ))}
       </div>
     </>
+    </AuthGuard>
   );
 }

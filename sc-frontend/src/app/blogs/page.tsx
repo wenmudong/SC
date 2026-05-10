@@ -7,6 +7,7 @@ import BlogCard from "@/components/Cards/BlogCard";
 import EmptyState from "@/components/EmptyState";
 import Loading from "@/components/Loading";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAuthGuard } from "@/hooks/useAuthGuard";
 import { blogApi } from "@/services/api";
 import type { BlogListItem, BlogCategory } from "@/types";
 
@@ -23,6 +24,7 @@ export default function BlogsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<BlogCategory | "ALL">("ALL");
   const { user } = useAuth();
+  const { isReady } = useAuthGuard();
 
   useEffect(() => {
     blogApi.list()
@@ -35,6 +37,8 @@ export default function BlogsPage() {
   const filteredBlogs = selectedCategory === "ALL"
     ? blogs
     : blogs.filter(b => b.category === selectedCategory);
+
+  if (!isReady) return null;
 
   return (
     <>
