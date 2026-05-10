@@ -15,6 +15,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### 一、基础规范
 
 1. **【固定格式】** 全部使用中文回复；回复以「wenmudong」开头，结尾加「喵~」
+2. **【执行任务】** 遇到可以并行处理的任务，强制使用子agent处理并行任务
+3. **【Skill使用顺序】** 优先使用Superpowers；强制采用TDD策略
 
 ### 二、需求阶段
 

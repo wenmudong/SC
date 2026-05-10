@@ -450,6 +450,7 @@ uv sync
 
 # 启动开发服务器
 uv run uvicorn app.main:app --reload --port 8000
+uv run sc.py
 
 # 运行测试（TDD）
 uv run pytest
