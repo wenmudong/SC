@@ -1,0 +1,185 @@
+"""工具路由 — 图片压缩"""
+
+import io
+import zipfile
+from pathlib import Path
+from typing import List
+
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
+from fastapi.responses import StreamingResponse
+from PIL import Image, UnidentifiedImageError
+
+from app.config import settings
+from app.middleware.auth import get_current_user
+from app.models import User
+
+router = APIRouter(prefix="/api/tools", tags=["工具"])
+
+# 允许的 MIME 类型
+ALLOWED_TYPES = {"image/jpeg", "image/png", "image/webp"}
+
+# MIME 类型 → Pillow 格式名
+TYPE_TO_FORMAT = {
+    "image/jpeg": "JPEG",
+    "image/png": "PNG",
+    "image/webp": "WEBP",
+}
+
+
+def _sanitize_filename(filename: str) -> str:
+    """清理文件名，去除路径注入，保留基本名称"""
+    return Path(filename).name if filename else "unknown"
+
+
+def _get_unique_name(name: str, used: set) -> str:
+    """处理文件名冲突：photo.jpg → photo_1.jpg → photo_2.jpg"""
+    if name not in used:
+        used.add(name)
+        return name
+
+    stem = Path(name).stem
+    suffix = Path(name).suffix
+    counter = 1
+    while True:
+        new_name = f"{stem}_{counter}{suffix}"
+        if new_name not in used:
+            used.add(new_name)
+            return new_name
+        counter += 1
+
+
+def _convert_to_rgb_if_needed(img: Image.Image, target_format: str) -> Image.Image:
+    """根据目标格式转换图片模式，避免 Pillow 保存时报错"""
+    if target_format == "JPEG":
+        # JPEG 不支持透明通道，需要合成到白色背景
+        if img.mode in ("RGBA", "LA"):
+            background = Image.new("RGB", img.size, (255, 255, 255))
+            background.paste(img, mask=img.split()[-1])
+            img = background
+        elif img.mode == "P":
+            img = img.convert("RGB")
+        elif img.mode == "CMYK":
+            img = img.convert("RGB")
+    elif target_format == "WEBP":
+        # WebP 支持 RGB 和 RGBA，但不支持 CMYK/P
+        if img.mode == "CMYK":
+            img = img.convert("RGB")
+        elif img.mode == "P":
+            img = img.convert("RGBA")
+    elif target_format == "PNG":
+        # PNG 支持多种模式，但 CMYK 需要转换
+        if img.mode == "CMYK":
+            img = img.convert("RGB")
+    return img
+
+
+@router.post("/compress")
+def compress_images(
+    files: List[UploadFile] = File(...),
+    quality: int = Form(80, ge=1, le=100),
+    output_format: str = Form("original"),
+    current_user: User = Depends(get_current_user),
+):
+    """批量压缩图片，返回 zip 文件流"""
+
+    # 校验 output_format 参数
+    if output_format not in ("original", "webp"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="output_format 必须为 'original' 或 'webp'",
+        )
+
+    # 校验文件数量
+    if len(files) == 0:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="请至少上传一个文件",
+        )
+    if len(files) > settings.maxCompressFiles:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"最多只能上传 {settings.maxCompressFiles} 个文件",
+        )
+
+    # 逐个校验和压缩
+    used_names: set = set()
+    total_size = 0
+    zip_buf = io.BytesIO()
+
+    with zipfile.ZipFile(zip_buf, "w", zipfile.ZIP_DEFLATED) as zf:
+        for file in files:
+            # 校验文件类型
+            if file.content_type not in ALLOWED_TYPES:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"不支持的文件类型: {file.filename}（{file.content_type}），仅支持 JPG/PNG/WebP",
+                )
+
+            # 读取文件内容
+            contents = file.file.read()
+            file_size = len(contents)
+
+            # 校验单文件大小
+            if file_size > settings.maxCompressSize:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"文件 {file.filename} 大小超过 {settings.maxCompressSize // (1024 * 1024)}MB 限制",
+                )
+
+            # 校验总大小
+            total_size += file_size
+            if total_size > settings.maxCompressTotalSize:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"文件总大小超过 {settings.maxCompressTotalSize // (1024 * 1024)}MB 限制",
+                )
+
+            # 用 Pillow 打开并压缩
+            try:
+                img = Image.open(io.BytesIO(contents))
+                img.load()  # 触发完整读取，捕获损坏文件
+            except UnidentifiedImageError:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"无法识别图片文件: {file.filename}",
+                )
+            except Exception:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"图片文件损坏或无法读取: {file.filename}",
+                )
+
+            # 确定输出格式和文件名
+            if output_format == "webp":
+                save_format = "WEBP"
+                out_name = Path(_sanitize_filename(file.filename)).stem + ".webp"
+            else:
+                # PNG 转为 JPG（PNG 是无损格式，quality 参数无效，需转为有损格式）
+                if file.content_type == "image/png":
+                    save_format = "JPEG"
+                    out_name = Path(_sanitize_filename(file.filename)).stem + ".jpg"
+                else:
+                    save_format = TYPE_TO_FORMAT[file.content_type]
+                    out_name = _sanitize_filename(file.filename)
+
+            # 转换图片模式
+            img = _convert_to_rgb_if_needed(img, save_format)
+
+            # 压缩到 BytesIO
+            compressed_buf = io.BytesIO()
+            img.save(compressed_buf, format=save_format, quality=quality)
+            compressed_buf.seek(0)
+
+            # 处理文件名冲突，写入 zip
+            out_name = _get_unique_name(out_name, used_names)
+            zf.writestr(out_name, compressed_buf.read())
+
+    # 返回 zip 流
+    zip_buf.seek(0)
+    return StreamingResponse(
+        iter([zip_buf.getvalue()]),
+        media_type="application/zip",
+        headers={
+            "Content-Disposition": 'attachment; filename="compressed.zip"',
+        },
+    )

@@ -48,7 +48,7 @@ export default function BlogsPage() {
           {/* 第一行: blogs. + 新建按钮 */}
           <div className="flex items-center justify-between">
             <h1 className="font-sans text-6xl font-extralight text-neutral-900 md:text-8xl">
-              blogs.
+              Blogs.
             </h1>
             {user?.role === "blogger" && filteredBlogs.length > 0 && (
               <Link
@@ -64,7 +64,7 @@ export default function BlogsPage() {
           {/* 第二行: posts 描述 + 分类筛选 */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <p className="text-lm text-neutral-400">
-              {filteredBlogs.length} {"posts"} · Wenmudong&apos;s thoughts and writings.
+              {filteredBlogs.length} {"Posts"} · Wenmudong&apos;s thoughts and writings.
             </p>
             <div className="flex gap-2 flex-wrap">
               {BLOG_CATEGORIES.map(cat => (

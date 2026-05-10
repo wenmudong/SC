@@ -182,3 +182,34 @@ export const adminApi = {
       token,
     }),
 };
+
+// Compress API
+export const compressApi = {
+  uploadAndCompress: async (
+    token: string,
+    files: File[],
+    quality: number,
+    outputFormat: "original" | "webp"
+  ): Promise<Blob> => {
+    const formData = new FormData();
+    files.forEach((f) => formData.append("files", f));
+    formData.append("quality", String(quality));
+    formData.append("output_format", outputFormat);
+
+    const res = await fetch(`${API_BASE}/tools/compress`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+    });
+
+    if (res.status === 401) {
+      window.dispatchEvent(new CustomEvent(AUTH_EXPIRED_EVENT));
+      throw new Error("请先登录");
+    }
+    if (!res.ok) {
+      const error = await res.json().catch(() => ({ detail: "压缩失败" }));
+      throw new Error(error.detail || `Error: ${res.status}`);
+    }
+    return res.blob();
+  },
+};

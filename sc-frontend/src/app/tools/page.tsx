@@ -16,20 +16,6 @@ interface Tool {
 // 临时工具数据，后续可从后端获取
 const TOOLS: Tool[] = [
   {
-    id: "1",
-    title: "QR Code Generator",
-    subtitle: "Generate QR codes for text, URLs, or any data",
-    category: "Tools",
-    linkUrl: "https://example.com/qr",
-  },
-  {
-    id: "2",
-    title: "Color Picker",
-    subtitle: "Pick and convert colors between formats",
-    category: "Tools",
-    linkUrl: "https://example.com/color",
-  },
-  {
     id: "3",
     title: "JSON Formatter",
     subtitle: "Format and validate JSON data",
@@ -85,6 +71,13 @@ const TOOLS: Tool[] = [
     category: "Tools",
     linkUrl: "https://example.com/cron",
   },
+  {
+    id: "compress",
+    title: "Image Compress",
+    subtitle: "Batch compress and convert images",
+    category: "Tools",
+    linkUrl: "/tools/compress",
+  },
 ];
 
 export default function ToolsPage() {
@@ -138,10 +131,10 @@ export default function ToolsPage() {
       <div className="sticky top-0 z-10 bg-white/90 backdrop-blur-sm">
         <div className="flex flex-col gap-4 px-2 pt-4 pb-4">
           <h1 className="font-sans text-6xl font-extralight text-neutral-900 md:text-8xl">
-            tools.
+            Tools.
           </h1>
           <p className="text-lm text-neutral-400">
-            {TOOLS.length} {"tools"} · Wenmudong&apos;s collection.
+            {TOOLS.length} {"Tools"} · Wenmudong&apos;s collection.
           </p>
         </div>
       </div>
@@ -169,11 +162,12 @@ export default function ToolsPage() {
             {TOOLS.map((tool) => (
               <TextCard
                 key={tool.id}
+                type="tool"
                 id={tool.id}
                 category={tool.category}
                 title={tool.title}
                 subtitle={tool.subtitle}
-                link={tool.linkUrl ? { url: tool.linkUrl, external: true } : undefined}
+                link={tool.linkUrl ? { url: tool.linkUrl, external: !tool.linkUrl.startsWith("/") } : undefined}
               />
             ))}
           </div>
