@@ -21,7 +21,7 @@ dist/
 build/
 
 # Local assets
-素材库/
+Question/
 .claude/
 
 # Personal files

@@ -70,6 +70,7 @@ export default function CompressPage() {
   const [isDragOver, setIsDragOver] = useState(false);
   const [validationError, setValidationError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const folderInputRef = useRef<HTMLInputElement>(null);
 
   // 文件数量和大小统计
   const totalSize = files.reduce((sum, item) => sum + item.file.size, 0);
@@ -227,6 +228,17 @@ export default function CompressPage() {
     [validateAndAddFiles]
   );
 
+  /** 通过文件夹选择器添加文件 */
+  const handleFolderSelect = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const selected = e.target.files;
+      if (!selected || selected.length === 0) return;
+      validateAndAddFiles(Array.from(selected));
+      e.target.value = "";
+    },
+    [validateAndAddFiles]
+  );
+
   /** 删除单个文件 */
   const removeFile = useCallback((id: string) => {
     setFiles((prev) => prev.filter((item) => item.id !== id));
@@ -319,18 +331,17 @@ export default function CompressPage() {
           onDragLeave={handleDragLeave}
           onDragOver={handleDragOver}
           onDrop={handleDrop}
-          onClick={() => fileInputRef.current?.click()}
-          className={`flex cursor-pointer flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed p-12 transition-colors ${
+          className={`flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed p-12 transition-colors ${
             isDragOver
               ? "border-neutral-900 bg-neutral-100"
-              : "border-neutral-300 hover:border-neutral-400 hover:bg-neutral-50"
+              : "border-neutral-300"
           }`}
         >
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-10 w-10 text-neutral-400">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
           </svg>
           <p className="text-sm text-neutral-500">
-            拖拽图片文件或文件夹到此处，或点击选择
+            拖拽图片文件或文件夹到此处，或使用下方按钮选择
           </p>
           <p className="text-xs text-neutral-400">
             支持 JPG / PNG / WebP，最多 50 个文件，单文件 20MB
@@ -338,12 +349,38 @@ export default function CompressPage() {
           <p className="text-xs text-neutral-400">
             PNG 文件将自动转为 JPG 以实现有损压缩
           </p>
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="rounded bg-neutral-100 px-4 py-2 text-sm text-neutral-700 transition-colors hover:bg-neutral-200"
+            >
+              选择文件
+            </button>
+            <button
+              type="button"
+              onClick={() => folderInputRef.current?.click()}
+              className="rounded bg-neutral-100 px-4 py-2 text-sm text-neutral-700 transition-colors hover:bg-neutral-200"
+            >
+              选择文件夹
+            </button>
+          </div>
           <input
             ref={fileInputRef}
             type="file"
             accept="image/jpeg,image/png,image/webp"
             multiple
             onChange={handleFileSelect}
+            className="hidden"
+          />
+          <input
+            ref={folderInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            multiple
+            // @ts-expect-error - webkitdirectory 是浏览器非标准属性
+            webkitdirectory=""
+            onChange={handleFolderSelect}
             className="hidden"
           />
         </div>
