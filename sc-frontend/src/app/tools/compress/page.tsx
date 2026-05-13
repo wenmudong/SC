@@ -63,6 +63,9 @@ export default function CompressPage() {
   const [files, setFiles] = useState<FileItem[]>([]);
   const [quality, setQuality] = useState(80);
   const [outputFormat, setOutputFormat] = useState<"original" | "webp">("original");
+  const [compressMode, setCompressMode] = useState<"quality" | "target_size">("quality");
+  const [targetSize, setTargetSize] = useState(100);
+  const [targetUnit, setTargetUnit] = useState<"KB" | "MB">("KB");
   const [isCompressing, setIsCompressing] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
   const [validationError, setValidationError] = useState("");
@@ -244,7 +247,15 @@ export default function CompressPage() {
 
     try {
       const fileObjects = files.map((item) => item.file);
-      const blob = await compressApi.uploadAndCompress(token, fileObjects, quality, outputFormat);
+      const targetSizeKb = compressMode === "target_size"
+        ? (targetUnit === "MB" ? targetSize * 1024 : targetSize)
+        : 0;
+      const blob = await compressApi.uploadAndCompress(token, fileObjects, {
+        quality,
+        outputFormat,
+        compressMode,
+        targetSizeKb,
+      });
 
       // 触发 zip 下载
       const url = URL.createObjectURL(blob);
@@ -264,7 +275,7 @@ export default function CompressPage() {
     } finally {
       setIsCompressing(false);
     }
-  }, [token, files, quality, outputFormat, showToast]);
+  }, [token, files, quality, outputFormat, compressMode, targetSize, targetUnit, showToast]);
 
   // 监听认证过期事件
   useEffect(() => {
@@ -398,36 +409,101 @@ export default function CompressPage() {
 
         {/* 控制区 */}
         <div className="mt-6 space-y-5">
-          {/* 质量滑块 */}
+          {/* 压缩模式 */}
           <div>
             <label className="mb-2 block text-sm text-neutral-600">
-              压缩质量：<span className="font-mono text-neutral-900">{quality}</span>
+              压缩模式
             </label>
-            <div className="flex items-center gap-3">
-              <input
-                type="range"
-                min={1}
-                max={100}
-                value={quality}
-                onChange={(e) => setQuality(Number(e.target.value))}
-                className="h-1.5 flex-1 cursor-pointer appearance-none rounded-full bg-neutral-200 accent-neutral-900"
-              />
-              <input
-                type="number"
-                min={1}
-                max={100}
-                value={quality}
-                onChange={(e) => {
-                  const v = Number(e.target.value);
-                  if (v >= 1 && v <= 100) setQuality(v);
-                }}
-                className="w-16 rounded border border-neutral-300 px-2 py-1 text-center text-sm focus:border-neutral-500 focus:outline-none"
-              />
+            <div className="flex gap-4">
+              <label className="flex cursor-pointer items-center gap-2">
+                <input
+                  type="radio"
+                  name="compressMode"
+                  value="quality"
+                  checked={compressMode === "quality"}
+                  onChange={() => setCompressMode("quality")}
+                  className="accent-neutral-900"
+                />
+                <span className="text-sm text-neutral-700">按质量</span>
+              </label>
+              <label className="flex cursor-pointer items-center gap-2">
+                <input
+                  type="radio"
+                  name="compressMode"
+                  value="target_size"
+                  checked={compressMode === "target_size"}
+                  onChange={() => setCompressMode("target_size")}
+                  className="accent-neutral-900"
+                />
+                <span className="text-sm text-neutral-700">按目标大小</span>
+              </label>
             </div>
-            <p className="mt-1 text-xs text-neutral-400">
-              数值越高质量越好，但文件越大；100 可能比原图更大
-            </p>
           </div>
+
+          {/* 按质量：质量滑块 */}
+          {compressMode === "quality" && (
+            <div>
+              <label className="mb-2 block text-sm text-neutral-600">
+                压缩质量：<span className="font-mono text-neutral-900">{quality}</span>
+              </label>
+              <div className="flex items-center gap-3">
+                <input
+                  type="range"
+                  min={1}
+                  max={100}
+                  value={quality}
+                  onChange={(e) => setQuality(Number(e.target.value))}
+                  className="h-1.5 flex-1 cursor-pointer appearance-none rounded-full bg-neutral-200 accent-neutral-900"
+                />
+                <input
+                  type="number"
+                  min={1}
+                  max={100}
+                  value={quality}
+                  onChange={(e) => {
+                    const v = Number(e.target.value);
+                    if (v >= 1 && v <= 100) setQuality(v);
+                  }}
+                  className="w-16 rounded border border-neutral-300 px-2 py-1 text-center text-sm focus:border-neutral-500 focus:outline-none"
+                />
+              </div>
+              <p className="mt-1 text-xs text-neutral-400">
+                数值越高质量越好，但文件越大；100 可能比原图更大
+              </p>
+            </div>
+          )}
+
+          {/* 按目标大小：目标输入 */}
+          {compressMode === "target_size" && (
+            <div>
+              <label className="mb-2 block text-sm text-neutral-600">
+                目标大小
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min={1}
+                  value={targetSize}
+                  onChange={(e) => {
+                    const v = Number(e.target.value);
+                    if (v >= 1) setTargetSize(v);
+                  }}
+                  className="w-24 rounded border border-neutral-300 px-3 py-1.5 text-sm focus:border-neutral-500 focus:outline-none"
+                />
+                <select
+                  value={targetUnit}
+                  onChange={(e) => setTargetUnit(e.target.value as "KB" | "MB")}
+                  className="rounded border border-neutral-300 bg-white px-2 py-1.5 text-sm focus:border-neutral-500 focus:outline-none"
+                >
+                  <option value="KB">KB</option>
+                  <option value="MB">MB</option>
+                </select>
+              </div>
+              <p className="mt-1 text-xs text-neutral-400">
+                每张图片压缩到目标大小以下；已小于此大小的图片将跳过
+              </p>
+            </div>
+          )}
 
           {/* 格式选择 */}
           <div>

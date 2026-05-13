@@ -30,6 +30,17 @@ def create_test_image(
     return buf.getvalue()
 
 
+def create_noisy_image(width: int = 800, height: int = 800) -> bytes:
+    """创建随机噪声图片（JPEG 压缩率低，体积较大）"""
+    import random
+    pixels = bytes(random.randint(0, 255) for _ in range(width * height * 3))
+    img = Image.frombytes("RGB", (width, height), pixels)
+    buf = io.BytesIO()
+    img.save(buf, format="JPEG", quality=95)
+    buf.seek(0)
+    return buf.getvalue()
+
+
 def create_large_test_image() -> bytes:
     """创建超过 20MB 的测试图片（用于文件大小限制测试）
 
@@ -358,5 +369,143 @@ async def test_compress_file_too_large(
         headers=headers,
         files=[("files", ("huge.jpg", large_image, "image/jpeg"))],
         data={"quality": "80", "output_format": "original"},
+    )
+    assert resp.status_code == 400
+
+
+# ---------------------------------------------------------------------------
+# 按目标大小压缩测试
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_compress_target_size_basic(
+    client: AsyncClient, auth_token: str,
+):
+    """大图 + target=50KB → 压缩后文件 < 50KB"""
+    headers = {"Authorization": f"Bearer {auth_token}"}
+    # 随机噪声图片，JPEG 压缩率低，体积较大
+    large_img = create_noisy_image(800, 800)
+    resp = await client.post(
+        COMPRESS_URL,
+        headers=headers,
+        files=[("files", ("big.jpg", large_img, "image/jpeg"))],
+        data={
+            "quality": "80",
+            "output_format": "original",
+            "compress_mode": "target_size",
+            "target_size_kb": "50",
+        },
+    )
+    assert resp.status_code == 200
+
+    zip_buf = io.BytesIO(resp.content)
+    with zipfile.ZipFile(zip_buf) as zf:
+        names = zf.namelist()
+        assert len(names) == 1
+        assert zf.getinfo(names[0]).file_size <= 50 * 1024
+
+
+@pytest.mark.asyncio
+async def test_compress_target_size_skip_small(
+    client: AsyncClient, auth_token: str,
+):
+    """小图(远小于目标) + target=100KB → 跳过，zip 为空"""
+    headers = {"Authorization": f"Bearer {auth_token}"}
+    small_img = create_test_image(fmt="JPEG", size=(10, 10), color="blue")
+    resp = await client.post(
+        COMPRESS_URL,
+        headers=headers,
+        files=[("files", ("tiny.jpg", small_img, "image/jpeg"))],
+        data={
+            "quality": "80",
+            "output_format": "original",
+            "compress_mode": "target_size",
+            "target_size_kb": "100",
+        },
+    )
+    assert resp.status_code == 200
+
+    zip_buf = io.BytesIO(resp.content)
+    with zipfile.ZipFile(zip_buf) as zf:
+        assert len(zf.namelist()) == 0
+
+
+@pytest.mark.asyncio
+async def test_compress_target_size_mixed(
+    client: AsyncClient, auth_token: str,
+):
+    """大图+小图 + target=30KB → zip 只含大图"""
+    headers = {"Authorization": f"Bearer {auth_token}"}
+    big_img = create_noisy_image(600, 600)
+    small_img = create_test_image(fmt="JPEG", size=(10, 10), color="blue")
+    files = [
+        ("files", ("big.jpg", big_img, "image/jpeg")),
+        ("files", ("tiny.jpg", small_img, "image/jpeg")),
+    ]
+    resp = await client.post(
+        COMPRESS_URL,
+        headers=headers,
+        files=files,
+        data={
+            "quality": "80",
+            "output_format": "original",
+            "compress_mode": "target_size",
+            "target_size_kb": "30",
+        },
+    )
+    assert resp.status_code == 200
+
+    zip_buf = io.BytesIO(resp.content)
+    with zipfile.ZipFile(zip_buf) as zf:
+        names = zf.namelist()
+        assert len(names) == 1
+        assert names[0] == "big.jpg"
+
+
+@pytest.mark.asyncio
+async def test_compress_target_size_all_skipped(
+    client: AsyncClient, auth_token: str,
+):
+    """所有图片都小于目标 → zip 为空"""
+    headers = {"Authorization": f"Bearer {auth_token}"}
+    small_img = create_test_image(fmt="JPEG", size=(5, 5), color="green")
+    files = [
+        ("files", ("a.jpg", small_img, "image/jpeg")),
+        ("files", ("b.jpg", small_img, "image/jpeg")),
+    ]
+    resp = await client.post(
+        COMPRESS_URL,
+        headers=headers,
+        files=files,
+        data={
+            "quality": "80",
+            "output_format": "original",
+            "compress_mode": "target_size",
+            "target_size_kb": "100",
+        },
+    )
+    assert resp.status_code == 200
+
+    zip_buf = io.BytesIO(resp.content)
+    with zipfile.ZipFile(zip_buf) as zf:
+        assert len(zf.namelist()) == 0
+
+
+@pytest.mark.asyncio
+async def test_compress_invalid_mode(
+    client: AsyncClient, auth_token: str, jpeg_bytes: bytes,
+):
+    """compress_mode 无效值 → 400"""
+    headers = {"Authorization": f"Bearer {auth_token}"}
+    resp = await client.post(
+        COMPRESS_URL,
+        headers=headers,
+        files=[("files", ("test.jpg", jpeg_bytes, "image/jpeg"))],
+        data={
+            "quality": "80",
+            "output_format": "original",
+            "compress_mode": "invalid",
+        },
     )
     assert resp.status_code == 400

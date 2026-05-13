@@ -188,13 +188,19 @@ export const compressApi = {
   uploadAndCompress: async (
     token: string,
     files: File[],
-    quality: number,
-    outputFormat: "original" | "webp"
+    options: {
+      quality: number;
+      outputFormat: "original" | "webp";
+      compressMode: "quality" | "target_size";
+      targetSizeKb: number;
+    }
   ): Promise<Blob> => {
     const formData = new FormData();
     files.forEach((f) => formData.append("files", f));
-    formData.append("quality", String(quality));
-    formData.append("output_format", outputFormat);
+    formData.append("quality", String(options.quality));
+    formData.append("output_format", options.outputFormat);
+    formData.append("compress_mode", options.compressMode);
+    formData.append("target_size_kb", String(options.targetSizeKb));
 
     const res = await fetch(`${API_BASE}/tools/compress`, {
       method: "POST",

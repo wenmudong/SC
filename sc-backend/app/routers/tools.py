@@ -48,6 +48,41 @@ def _get_unique_name(name: str, used: set) -> str:
         counter += 1
 
 
+def _compress_to_target_size(
+    img: Image.Image,
+    save_format: str,
+    target_bytes: int,
+    original_bytes: int,
+) -> io.BytesIO | None:
+    """二分查找最优 quality，将图片压缩到目标大小以下。
+
+    返回压缩后的 BytesIO，若原图已小于目标则返回 None（跳过）。
+    """
+    if original_bytes <= target_bytes:
+        return None
+
+    # 二分查找能满足目标的最高 quality
+    low, high = 1, 100
+    best_buf = None
+    while low <= high:
+        mid = (low + high) // 2
+        buf = io.BytesIO()
+        img.save(buf, format=save_format, quality=mid)
+        if len(buf.getvalue()) <= target_bytes:
+            best_buf = buf
+            low = mid + 1  # 尝试更高质量
+        else:
+            high = mid - 1  # 降低质量
+
+    # quality=1 仍超目标，用 quality=1 尽力而为
+    if best_buf is None:
+        best_buf = io.BytesIO()
+        img.save(best_buf, format=save_format, quality=1)
+
+    best_buf.seek(0)
+    return best_buf
+
+
 def _convert_to_rgb_if_needed(img: Image.Image, target_format: str) -> Image.Image:
     """根据目标格式转换图片模式，避免 Pillow 保存时报错"""
     if target_format == "JPEG":
@@ -78,6 +113,8 @@ def compress_images(
     files: List[UploadFile] = File(...),
     quality: int = Form(80, ge=1, le=100),
     output_format: str = Form("original"),
+    compress_mode: str = Form("quality"),
+    target_size_kb: int = Form(0, ge=0),
     current_user: User = Depends(get_current_user),
 ):
     """批量压缩图片，返回 zip 文件流"""
@@ -88,6 +125,22 @@ def compress_images(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="output_format 必须为 'original' 或 'webp'",
         )
+
+    # 校验 compress_mode 参数
+    if compress_mode not in ("quality", "target_size"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="compress_mode 必须为 'quality' 或 'target_size'",
+        )
+
+    # 按目标大小模式需要有效的 target_size_kb
+    if compress_mode == "target_size" and target_size_kb <= 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="按目标大小压缩时，target_size_kb 必须大于 0",
+        )
+
+    target_bytes = target_size_kb * 1024 if compress_mode == "target_size" else 0
 
     # 校验文件数量
     if len(files) == 0:
@@ -165,10 +218,17 @@ def compress_images(
             # 转换图片模式
             img = _convert_to_rgb_if_needed(img, save_format)
 
-            # 压缩到 BytesIO
-            compressed_buf = io.BytesIO()
-            img.save(compressed_buf, format=save_format, quality=quality)
-            compressed_buf.seek(0)
+            # 根据压缩模式处理
+            if compress_mode == "target_size":
+                compressed_buf = _compress_to_target_size(
+                    img, save_format, target_bytes, file_size
+                )
+                if compressed_buf is None:
+                    continue  # 原图已小于目标，跳过
+            else:
+                compressed_buf = io.BytesIO()
+                img.save(compressed_buf, format=save_format, quality=quality)
+                compressed_buf.seek(0)
 
             # 处理文件名冲突，写入 zip
             out_name = _get_unique_name(out_name, used_names)
