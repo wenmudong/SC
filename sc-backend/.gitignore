@@ -12,3 +12,5 @@ wheels/
 # Databases
 data/*.db
 *.db
+*.db-shm
+*.db-wal

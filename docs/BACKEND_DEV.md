@@ -350,7 +350,7 @@ class Settings(BaseSettings):
     app_name: str = "SuperCenter API"
     debug: bool = True
     database_url: str = "sqlite:///./data/supercenter.db"
-    secret_key: str = "your-super-secret-key-change-in-production"
+    secret_key: str  # 必填，通过 .env 或环境变量设置
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 60 * 24 * 7  # 7 天
     upload_dir: str = "public/uploads"
@@ -507,12 +507,13 @@ python -m scripts.seed_db
 
 ### 13.1 预置账号
 
-| 用户名 | 密码 | 角色 |
-|--------|------|------|
-| `wenmudong` | `wenmudong.hwd` | blogger |
-| `admin` | `admin.hwd` | admin |
+部署后通过种子脚本创建初始账号：
 
-> ⚠️ 部署时需修改为自定义账号密码
+```bash
+python -m scripts.seed_db
+```
+
+> ⚠️ 请自行设置用户名和密码，不要使用默认值
 
 ### 13.2 API 访问
 

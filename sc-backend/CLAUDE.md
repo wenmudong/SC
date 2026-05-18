@@ -116,12 +116,13 @@ public/             # 静态文件
 
 ## 预置账号
 
-| 用户名 | 密码 | 角色 |
-|--------|------|------|
-| `wenmudong` | `wenmudong.hwd` | blogger |
-| `admin` | `admin.hwd` | admin |
+部署后通过种子脚本创建初始账号：
 
-> ⚠️ 部署时需修改为自定义账号密码
+```bash
+python -m scripts.seed_db
+```
+
+> ⚠️ 请自行设置用户名和密码，不要使用默认值
 
 ## API 路由
 
