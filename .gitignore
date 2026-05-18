@@ -3,27 +3,37 @@ sc-frontend/node_modules/
 sc-frontend/.next/
 
 # Python
-sc-backend/__pycache__/
-sc-backend/*.pyc
-sc-backend/data/*.db
-sc-backend.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.sc-backend.venv/
 
 # Environment
 .env
+.env.*
+
+# Databases
+*.db
+*.sqlite
 
 # OS
 .DS_Store
 Thumbs.db
 
-# Build outputs
-*.egg-info/
-dist/
-build/
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
 
 # Local assets
 Question/
 .claude/
 
 # Personal files
-docs/
+docs/private/
+docs/plans/
 CLAUDE.md

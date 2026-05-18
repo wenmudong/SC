@@ -3,7 +3,7 @@ import base64
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from sqlmodel import Session
 
-from app.database import engine
+from app.database import get_db
 from app.models import User
 from app.middleware.auth import get_current_user
 from app.config import settings
@@ -15,6 +15,7 @@ router = APIRouter(prefix="/api/upload", tags=["上传"])
 def upload_avatar(
     file: UploadFile = File(...),
     current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
 ):
     """上传头像（将图片转为 base64 存储）"""
     # 验证文件类型
@@ -40,11 +41,10 @@ def upload_avatar(
     data_url = f"data:{mime_type};base64,{base64_data}"
 
     # 更新用户头像（存储完整的 data URL）
-    with Session(engine) as session:
-        user = session.get(User, current_user.id)
-        if user:
-            user.avatar_url = data_url
-            session.add(user)
-            session.commit()
+    user = db.get(User, current_user.id)
+    if user:
+        user.avatar_url = data_url
+        db.add(user)
+        db.commit()
 
     return {"url": data_url}

@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     database_url: str = "sqlite:///./data/supercenter.db"
 
     # JWT 配置
-    secret_key: str = "your-super-secret-key-change-in-production"  # 生产环境请更换
+    secret_key: str  # 必填，通过 .env 或环境变量设置
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 60 * 24 * 7  # 7 天过期
 

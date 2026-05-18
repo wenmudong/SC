@@ -2,7 +2,7 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
 
-from app.database import engine
+from app.database import get_db
 from app.models.system import SystemConfig
 from app.models.user import User
 from app.schemas.system import (
@@ -27,68 +27,63 @@ def require_admin(current_user: User = Depends(get_current_user)) -> User:
 
 
 @router.get("/config", response_model=SystemConfigListResponse)
-def get_all_configs(current_user: User = Depends(require_admin)):
+def get_all_configs(db: Session = Depends(get_db), current_user: User = Depends(require_admin)):
     """获取所有系统配置"""
-    with Session(engine) as session:
-        configs = session.exec(select(SystemConfig)).all()
-        return SystemConfigListResponse(configs=configs, total=len(configs))
+    configs = db.exec(select(SystemConfig)).all()
+    return SystemConfigListResponse(configs=configs, total=len(configs))
 
 
 @router.get("/config/{key}", response_model=SystemConfigResponse)
-def get_config(key: str, current_user: User = Depends(require_admin)):
+def get_config(key: str, db: Session = Depends(get_db), current_user: User = Depends(require_admin)):
     """获取单个系统配置"""
-    with Session(engine) as session:
-        config = session.exec(select(SystemConfig).where(SystemConfig.key == key)).first()
-        if not config:
-            raise HTTPException(status_code=404, detail="配置不存在")
-        return config
+    config = db.exec(select(SystemConfig).where(SystemConfig.key == key)).first()
+    if not config:
+        raise HTTPException(status_code=404, detail="配置不存在")
+    return config
 
 
 @router.post("/config", response_model=SystemConfigResponse, status_code=201)
-def create_config(config_data: SystemConfigCreate, current_user: User = Depends(require_admin)):
+def create_config(config_data: SystemConfigCreate, db: Session = Depends(get_db), current_user: User = Depends(require_admin)):
     """创建系统配置"""
-    with Session(engine) as session:
-        existing = session.exec(select(SystemConfig).where(SystemConfig.key == config_data.key)).first()
-        if existing:
-            raise HTTPException(status_code=400, detail="配置键已存在")
+    existing = db.exec(select(SystemConfig).where(SystemConfig.key == config_data.key)).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="配置键已存在")
 
-        config = SystemConfig(**config_data.model_dump())
-        session.add(config)
-        session.commit()
-        session.refresh(config)
-        return config
+    config = SystemConfig(**config_data.model_dump())
+    db.add(config)
+    db.commit()
+    db.refresh(config)
+    return config
 
 
 @router.put("/config/{key}", response_model=SystemConfigResponse)
-def update_config(key: str, config_data: SystemConfigUpdate, current_user: User = Depends(require_admin)):
+def update_config(key: str, config_data: SystemConfigUpdate, db: Session = Depends(get_db), current_user: User = Depends(require_admin)):
     """更新系统配置（不存在则创建）"""
-    with Session(engine) as session:
-        config = session.exec(select(SystemConfig).where(SystemConfig.key == key)).first()
+    config = db.exec(select(SystemConfig).where(SystemConfig.key == key)).first()
 
-        if not config:
-            # 不存在则创建
-            config = SystemConfig(key=key, value=config_data.value)
-            session.add(config)
-        else:
-            # 存在则更新
-            config.value = config_data.value
-            if config_data.description is not None:
-                config.description = config_data.description
-            session.add(config)
+    if not config:
+        # 不存在则创建
+        config = SystemConfig(key=key, value=config_data.value)
+        db.add(config)
+    else:
+        # 存在则更新
+        config.value = config_data.value
+        if config_data.description is not None:
+            config.description = config_data.description
+        db.add(config)
 
-        session.commit()
-        session.refresh(config)
-        return config
+    db.commit()
+    db.refresh(config)
+    return config
 
 
 @router.delete("/config/{key}", status_code=204)
-def delete_config(key: str, current_user: User = Depends(require_admin)):
+def delete_config(key: str, db: Session = Depends(get_db), current_user: User = Depends(require_admin)):
     """删除系统配置"""
-    with Session(engine) as session:
-        config = session.exec(select(SystemConfig).where(SystemConfig.key == key)).first()
-        if not config:
-            raise HTTPException(status_code=404, detail="配置不存在")
+    config = db.exec(select(SystemConfig).where(SystemConfig.key == key)).first()
+    if not config:
+        raise HTTPException(status_code=404, detail="配置不存在")
 
-        session.delete(config)
-        session.commit()
-        return None
+    db.delete(config)
+    db.commit()
+    return None

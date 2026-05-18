@@ -271,23 +271,30 @@ def list_blogs(
 
 ### 6.1 数据库会话管理
 
-```python
-from sqlmodel import Session
+使用 FastAPI 依赖注入模式（`get_db`），不在路由函数中手动创建 Session：
 
-# 标准写法
-with Session(engine) as session:
-    user = session.get(User, user_id)
+```python
+from fastapi import Depends
+from sqlmodel import Session
+from app.database import get_db
+
+# 路由函数通过 Depends 注入 db
+@router.get("/{blog_id}", response_model=BlogResponse)
+def get_blog(blog_id: int, db: Session = Depends(get_db)):
+    blog = db.get(Blog, blog_id)
     # ... 业务逻辑
-    session.commit()
-    session.refresh(user)
-    return user
+    db.commit()
+    db.refresh(blog)
+    return blog
 ```
+
+> ⚠️ 不要使用 `with Session(engine) as session:` 的旧写法，统一用 `Depends(get_db)` 注入。
 
 ### 6.2 权限检查
 
 ```python
 # 检查资源归属
-blog = session.get(Blog, blog_id)
+blog = db.get(Blog, blog_id)
 if blog.author_id != current_user.id:
     raise HTTPException(
         status_code=status.HTTP_403_FORBIDDEN,
@@ -301,18 +308,38 @@ if blog.author_id != current_user.id:
 # 删除时设置标记
 blog.is_deleted = True
 blog.deleted_at = datetime.utcnow()
-session.add(blog)
-session.commit()
+db.add(blog)
+db.commit()
 
 # 查询时过滤已删除
-blogs = session.exec(
+blogs = db.exec(
     select(Blog).where(Blog.is_deleted == False)
 ).all()
 ```
 
 ---
 
-## 7. 配置规范
+## 7. 中间件规范
+
+### 7.1 请求日志
+
+每个请求自动记录 method、path、status_code、耗时(ms)，在 `main.py` 中通过 `@app.middleware("http")` 实现。
+
+### 7.2 全局异常处理
+
+`main.py` 中注册了 `@app.exception_handler(Exception)`，未捕获的异常统一返回：
+```json
+{"detail": "服务器内部错误，请稍后重试"}
+```
+错误日志记录到 `supercenter` logger。
+
+### 7.3 响应压缩
+
+启用 `GZipMiddleware`，超过 1000 字节的响应自动 gzip 压缩。
+
+---
+
+## 8. 配置规范
 
 ### 7.1 Settings 类
 
@@ -427,6 +454,21 @@ def require_blogger(current_user: User = Depends(get_current_user)) -> User:
 
 - 后端启动时通过 `lifespan` 自动创建数据库和表
 - 使用 `python -m scripts.seed_db` 创建预置账号
+
+### 10.4 索引策略
+
+为高频查询字段添加索引，通过 SQLModel 的 `Field(index=True)` 声明：
+
+| 表 | 字段 | 用途 |
+|----|------|------|
+| blogs | `author_id` | 按作者查询 |
+| blogs | `is_deleted` | 列表过滤已删除 |
+| blogs | `created_at` | 排序 |
+| comments | `blog_id` | 按博客查评论 |
+| comments | `parent_id` | 嵌套查询 |
+| comments | `is_deleted` | 过滤已删除 |
+
+> ⚠️ 现有数据库添加索引需要重建表，删除 `data/*.db` 后重启服务即可。
 
 ---
 

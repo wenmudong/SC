@@ -7,7 +7,7 @@ from jose import JWTError, jwt
 from sqlmodel import Session, select
 
 from app.config import settings
-from app.database import engine
+from app.database import get_db
 from app.models import User
 
 # HTTP Bearer 安全方案
@@ -38,7 +38,10 @@ def verify_token(token: str) -> Optional[int]:
         return None
 
 
-def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> User:
+def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: Session = Depends(get_db),
+) -> User:
     """获取当前登录用户（需要认证）"""
     token = credentials.credentials
     user_id = verify_token(token)
@@ -50,15 +53,14 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    with Session(engine) as session:
-        user = session.get(User, user_id)
-        if user is None:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="用户不存在",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-        return user
+    user = db.get(User, user_id)
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="用户不存在",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return user
 
 
 def require_blogger(current_user: User = Depends(get_current_user)) -> User:

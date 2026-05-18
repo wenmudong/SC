@@ -188,10 +188,19 @@ public/             # 静态文件
 - **Token**：python-jose (JWT)
 - **文件上传**：图片转为 base64 直接存储在数据库
 
+## 中间件
+
+- **请求日志**：记录每个请求的 method、path、status_code、耗时(ms)
+- **全局异常处理**：未捕获异常统一返回 `{"detail": "服务器内部错误，请稍后重试"}`
+- **响应压缩**：`GZipMiddleware`，超过 1000 字节自动 gzip 压缩
+- **CORS**：允许所有来源
+
 ## 开发约定
 
 - 使用 SQLModel 定义模型，继承 `SQLModel, table=True`
+- 高频查询字段通过 `Field(index=True)` 添加索引（如 `is_deleted`、`author_id`、`blog_id`）
 - 使用 Pydantic Schema 进行请求/响应验证
+- 路由通过 `Depends(get_db)` 注入数据库会话，不要使用 `with Session(engine)` 的旧写法
 - 路由通过 `Depends` 注入认证依赖
 - 使用 `verify_token` 验证 JWT Token
 - 使用 `require_blogger` 装饰器限制博主权限
@@ -218,6 +227,7 @@ public/             # 静态文件
        response = await client.post("/api/blogs", json={...})
        assert response.status_code == 201
    ```
+   > 测试通过 `client` fixture 自动使用独立的测试数据库（`test_sc.db`）
 
 2. **运行测试**（预期失败）：`uv run pytest tests/routers/test_blogs.py -v`
 
@@ -238,8 +248,9 @@ public/             # 静态文件
 
 ### 数据库测试策略
 
-- 测试用独立 DB：每个测试用例用临时 SQLite 文件，测试结束删除
-- 或用 `:memory:` 内存数据库，速度更快
+- 测试使用独立 DB：`data/test_sc.db`，通过 `conftest.py` 中的 `dependency_overrides` 覆盖 `get_db`
+- 每个测试前自动建表，测试后自动清理（drop_all）
+- 测试数据库配置在 `tests/conftest.py` 的 `test_engine` 中管理
 
 ## 相关文档
 
