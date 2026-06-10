@@ -171,6 +171,7 @@ def compress_images(
             # 读取文件内容
             contents = file.file.read()
             file_size = len(contents)
+            original_bytes_data = contents  # 保留原始字节，跳过压缩时直接写入 zip
 
             # 校验单文件大小
             if file_size > settings.maxCompressSize:
@@ -224,7 +225,10 @@ def compress_images(
                     img, save_format, target_bytes, file_size
                 )
                 if compressed_buf is None:
-                    continue  # 原图已小于目标，跳过
+                    # 原图已小于目标，保留原始文件（不重新编码，避免文件变大）
+                    out_name = _get_unique_name(out_name, used_names)
+                    zf.writestr(out_name, original_bytes_data)
+                    continue
             else:
                 compressed_buf = io.BytesIO()
                 img.save(compressed_buf, format=save_format, quality=quality)

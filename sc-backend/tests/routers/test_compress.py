@@ -410,7 +410,7 @@ async def test_compress_target_size_basic(
 async def test_compress_target_size_skip_small(
     client: AsyncClient, auth_token: str,
 ):
-    """小图(远小于目标) + target=100KB → 跳过，zip 为空"""
+    """小图(远小于目标) + target=100KB → 跳过压缩，但原始文件保留在 zip 中"""
     headers = {"Authorization": f"Bearer {auth_token}"}
     small_img = create_test_image(fmt="JPEG", size=(10, 10), color="blue")
     resp = await client.post(
@@ -428,14 +428,18 @@ async def test_compress_target_size_skip_small(
 
     zip_buf = io.BytesIO(resp.content)
     with zipfile.ZipFile(zip_buf) as zf:
-        assert len(zf.namelist()) == 0
+        names = zf.namelist()
+        assert len(names) == 1
+        assert names[0] == "tiny.jpg"
+        # 原始文件内容应完整保留
+        assert zf.read(names[0]) == small_img
 
 
 @pytest.mark.asyncio
 async def test_compress_target_size_mixed(
     client: AsyncClient, auth_token: str,
 ):
-    """大图+小图 + target=30KB → zip 只含大图"""
+    """大图+小图 + target=30KB → zip 含大图（压缩后）和小图（原始保留）"""
     headers = {"Authorization": f"Bearer {auth_token}"}
     big_img = create_noisy_image(600, 600)
     small_img = create_test_image(fmt="JPEG", size=(10, 10), color="blue")
@@ -459,15 +463,20 @@ async def test_compress_target_size_mixed(
     zip_buf = io.BytesIO(resp.content)
     with zipfile.ZipFile(zip_buf) as zf:
         names = zf.namelist()
-        assert len(names) == 1
-        assert names[0] == "big.jpg"
+        assert len(names) == 2
+        assert "big.jpg" in names
+        assert "tiny.jpg" in names
+        # 小图保留原始内容
+        assert zf.read("tiny.jpg") == small_img
+        # 大图被压缩到 30KB 以下
+        assert zf.getinfo("big.jpg").file_size <= 30 * 1024
 
 
 @pytest.mark.asyncio
 async def test_compress_target_size_all_skipped(
     client: AsyncClient, auth_token: str,
 ):
-    """所有图片都小于目标 → zip 为空"""
+    """所有图片都小于目标 → 跳过压缩，但原始文件保留在 zip 中"""
     headers = {"Authorization": f"Bearer {auth_token}"}
     small_img = create_test_image(fmt="JPEG", size=(5, 5), color="green")
     files = [
@@ -489,7 +498,13 @@ async def test_compress_target_size_all_skipped(
 
     zip_buf = io.BytesIO(resp.content)
     with zipfile.ZipFile(zip_buf) as zf:
-        assert len(zf.namelist()) == 0
+        names = zf.namelist()
+        assert len(names) == 2
+        assert "a.jpg" in names
+        assert "b.jpg" in names
+        # 所有原始文件内容应完整保留
+        assert zf.read("a.jpg") == small_img
+        assert zf.read("b.jpg") == small_img
 
 
 @pytest.mark.asyncio
