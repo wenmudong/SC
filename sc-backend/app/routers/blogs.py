@@ -68,7 +68,19 @@ def create_blog(
     db.add(blog)
     db.commit()
     db.refresh(blog)
-    return blog
+
+    return BlogResponse(
+        id=blog.id,
+        title=blog.title,
+        subtitle=blog.subtitle,
+        content=blog.content,
+        category=blog.category,
+        author_id=blog.author_id,
+        author_username=current_user.username,
+        view_count=blog.view_count,
+        created_at=blog.created_at,
+        updated_at=blog.updated_at,
+    )
 
 
 @router.get("/{blog_id}", response_model=BlogResponse)
