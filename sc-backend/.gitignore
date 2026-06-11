@@ -5,12 +5,38 @@ build/
 dist/
 wheels/
 *.egg-info
+*.egg
 
 # Virtual environments
-.venv
+.venv/
+venv/
+ENV/
+
+# Environment
+.env
+.env.*
 
 # Databases
 data/*.db
 *.db
 *.db-shm
 *.db-wal
+*.sqlite
+
+# Test coverage
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+
+# Python build/distribution
+*.spec
+*.pyd

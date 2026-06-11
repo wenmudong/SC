@@ -9,7 +9,14 @@ __pycache__/
 *.egg-info/
 dist/
 build/
-.sc-backend.venv/
+*.egg
+
+# Virtual environments
+.sc-backend/.venv/
+sc-backend/.venv/
+.venv/
+venv/
+ENV/
 
 # Environment
 .env
@@ -39,3 +46,27 @@ Question/
 docs/private/
 docs/plans/
 CLAUDE.md
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+
+# Test coverage
+.coverage
+.coverage.*
+htmlcov/
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# Python build/distribution
+*.spec
+*.pyd
+
+# Deployment (if needed)
+# .vercel/
+# .netlify/
