@@ -84,7 +84,7 @@ export default function Navbar() {
           className="absolute left-0 -z-10 h-7 rounded bg-neutral-200 backdrop-blur transition-[width,transform] duration-150"
           style={{ width: indicatorStyle.width, transform: indicatorStyle.transform }}
         />
-        {navItems.map((item, index) => (
+        {navItems.map((item: { label: string; href: string; visible?: boolean }, index: number) => (
           <Link
             key={item.href}
             href={item.href}
@@ -107,7 +107,7 @@ export default function Navbar() {
 
       {/* 右侧链接 */}
       <div className="hidden md:flex pointer-events-auto gap-2">
-        {rightLinks.map((link, index) => (
+        {rightLinks.map((link: { label: string; href: string; visible?: boolean }, index: number) => (
           <a
             key={index}
             href={link.href}

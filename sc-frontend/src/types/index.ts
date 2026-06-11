@@ -42,7 +42,6 @@ export interface BlogListItem {
   view_count: number;  // 阅读量
   created_at: string;
   updated_at: string;
-  comment_count: number;
 }
 
 // Hobby 类型
