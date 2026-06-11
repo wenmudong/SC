@@ -28,17 +28,14 @@ sc-backend/
 │   ├── database.py          # 数据库引擎
 │   ├── models/              # SQLModel 数据模型
 │   │   ├── user.py
-│   │   ├── blog.py
-│   │   └── comment.py
+│   │   └── blog.py
 │   ├── schemas/             # Pydantic 请求/响应模型
 │   │   ├── user.py
-│   │   ├── blog.py
-│   │   └── comment.py
+│   │   └── blog.py
 │   ├── routers/             # API 路由
 │   │   ├── auth.py
 │   │   ├── users.py
 │   │   ├── blogs.py
-│   │   ├── comments.py
 │   │   └── upload.py
 │   └── middleware/
 │       └── auth.py          # JWT 认证中间件
@@ -464,9 +461,6 @@ def require_blogger(current_user: User = Depends(get_current_user)) -> User:
 | blogs | `author_id` | 按作者查询 |
 | blogs | `is_deleted` | 列表过滤已删除 |
 | blogs | `created_at` | 排序 |
-| comments | `blog_id` | 按博客查评论 |
-| comments | `parent_id` | 嵌套查询 |
-| comments | `is_deleted` | 过滤已删除 |
 
 > ⚠️ 现有数据库添加索引需要重建表，删除 `data/*.db` 后重启服务即可。
 
@@ -476,8 +470,8 @@ def require_blogger(current_user: User = Depends(get_current_user)) -> User:
 
 | 角色 | 值 | 权限说明 |
 |------|-----|----------|
-| `user` | 普通用户 | 评论、修改个人信息 |
-| `blogger` | 博主 | 发布/管理博客、增删改查评论 |
+| `user` | 普通用户 | 修改个人信息 |
+| `blogger` | 博主 | 发布/管理博客 |
 | `admin` | 管理员 | 功能待定 |
 
 ---

@@ -6,7 +6,7 @@ from enum import Enum
 
 class UserRole(str, Enum):
     BLOGGER = "blogger"  # 博主：发布/管理博客
-    USER = "user"        # 普通用户：评论、修改个人信息
+    USER = "user"        # 普通用户：修改个人信息
     ADMIN = "admin"      # 管理员：功能待定
 
 

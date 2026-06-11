@@ -2,10 +2,10 @@
 from datetime import datetime
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query
-from sqlmodel import Session, select, func
+from sqlmodel import Session, select
 
 from app.database import get_db
-from app.models import User, Blog, Comment
+from app.models import User, Blog
 from app.schemas import BlogCreate, BlogUpdate, BlogResponse, BlogListResponse
 from app.middleware.auth import get_current_user, require_blogger
 
@@ -20,21 +20,9 @@ def list_blogs(
     db: Session = Depends(get_db),
 ):
     """获取博客列表（排除已删除）"""
-    # 子查询：计算每个博客的评论数
-    comment_count_subquery = (
-        select(
-            Comment.blog_id,
-            func.count().label("comment_count"),
-        )
-        .where(Comment.is_deleted == False)
-        .group_by(Comment.blog_id)
-        .subquery()
-    )
-
     query = (
-        select(Blog, User.username, func.coalesce(comment_count_subquery.c.comment_count, 0))
+        select(Blog, User.username)
         .join(User, Blog.author_id == User.id)
-        .join(comment_count_subquery, Blog.id == comment_count_subquery.c.blog_id, isouter=True)
         .where(Blog.is_deleted == False)
     )
 
@@ -58,9 +46,8 @@ def list_blogs(
             view_count=blog.view_count,
             created_at=blog.created_at,
             updated_at=blog.updated_at,
-            comment_count=comment_count,
         )
-        for blog, author_username, comment_count in blogs
+        for blog, author_username in blogs
     ]
 
 

@@ -42,26 +42,6 @@ export interface BlogListItem {
   view_count: number;  // 阅读量
   created_at: string;
   updated_at: string;
-  comment_count: number;
-}
-
-// 评论类型
-export interface Comment {
-  id: number;
-  blog_id: number;
-  author_id: number;
-  author_username: string;
-  author_avatar: string | null;
-  parent_id: number | null;
-  depth: number;
-  is_deleted: boolean;
-  content: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface CommentTree extends Comment {
-  replies: CommentTree[];
 }
 
 // Hobby 类型

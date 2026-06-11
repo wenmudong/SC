@@ -12,12 +12,6 @@ from app.schemas.blog import (
     BlogResponse,
     BlogListResponse,
 )
-from app.schemas.comment import (
-    CommentCreate,
-    CommentUpdate,
-    CommentResponse,
-    CommentTreeResponse,
-)
 
 __all__ = [
     "UserCreate",
@@ -30,8 +24,4 @@ __all__ = [
     "BlogUpdate",
     "BlogResponse",
     "BlogListResponse",
-    "CommentCreate",
-    "CommentUpdate",
-    "CommentResponse",
-    "CommentTreeResponse",
 ]

@@ -51,7 +51,6 @@ class BlogListResponse(BaseModel):
     view_count: int = 0  # 阅读量
     created_at: datetime
     updated_at: datetime
-    comment_count: int = 0
 
     class Config:
         from_attributes = True

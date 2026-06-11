@@ -52,14 +52,13 @@ export default function BlogCard({
         className={`h-full w-full overflow-hidden rounded-lg bg-neutral-50 transition-colors focus-within:bg-neutral-100 hover:bg-neutral-100 ${wide ? "aspect-[2/1]" : "aspect-square"}`}
       >
         <div className="isolate flex h-full w-full flex-col justify-between">
-          {/* 顶部：分类 + 评论数 + 阅读量 */}
+          {/* 顶部：分类 + 阅读量 */}
           <div className="flex items-center justify-between pl-4 pr-4 pt-4 text-sm tracking-tight text-neutral-400">
             <span className={`inline-block rounded px-1.5 pt-0.5 pb-1 font-mono text-sm tracking-tight shadow-inset-skeuo ${config.bg} ${config.text}`}>
               {config.label}
             </span>
             <div className="flex gap-3">
               <span>{blog.view_count} views</span>
-              <span>{blog.comment_count} comments</span>
             </div>
           </div>
 
