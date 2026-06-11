@@ -38,6 +38,9 @@ Thumbs.db
 *.swp
 *.swo
 
+# Claude Code
+.mcp.json
+
 # Local assets
 Question/
 .claude/
