@@ -1,5 +1,5 @@
 // 后端 API 服务层
-import type { User, Token, Blog, BlogListItem, CommentTree, SystemConfig } from "@/types";
+import type { User, Token, Blog, BlogListItem, SystemConfig } from "@/types";
 
 // 根据当前访问地址动态推断后端地址，支持 localhost 和局域网 IP 访问
 const API_BASE = typeof window !== 'undefined'
@@ -107,25 +107,6 @@ export const blogApi = {
 
   delete: (token: string, id: number) =>
     request<void>(`/blogs/${id}`, {
-      method: "DELETE",
-      token,
-    }),
-};
-
-// Comment API
-export const commentApi = {
-  list: (blogId: number) =>
-    request<CommentTree[]>(`/blogs/${blogId}/comments`),
-
-  create: (token: string, blogId: number, content: string, parentId?: number) =>
-    request<CommentTree>(`/blogs/${blogId}/comments`, {
-      method: "POST",
-      body: { content, parent_id: parentId },
-      token,
-    }),
-
-  delete: (token: string, blogId: number, commentId: number) =>
-    request<void>(`/blogs/${blogId}/comments/${commentId}`, {
       method: "DELETE",
       token,
     }),

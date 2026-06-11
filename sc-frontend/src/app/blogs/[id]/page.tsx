@@ -8,8 +8,8 @@ import remarkGfm from "remark-gfm";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/Toast";
 import ConfirmDialog from "@/components/ConfirmDialog";
-import { blogApi, commentApi } from "@/services/api";
-import type { Blog, CommentTree, BlogCategory } from "@/types";
+import { blogApi } from "@/services/api";
+import type { Blog, BlogCategory } from "@/types";
 
 // 时间格式化函数
 function formatTimeAgo(dateStr: string): string {
@@ -40,20 +40,13 @@ export default function BlogDetailPage() {
   const params = useParams();
   const blogId = Number(params.id);
   const [blog, setBlog] = useState<Blog | null>(null);
-  const [comments, setComments] = useState<CommentTree[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [newComment, setNewComment] = useState("");
-  const [replyTo, setReplyTo] = useState<number | null>(null);
-  const [replyContent, setReplyContent] = useState("");
   const { user, token } = useAuth();
   const router = useRouter();
   const { showToast } = useToast();
 
   // 删除博客确认弹窗状态
   const [showDeleteBlogConfirm, setShowDeleteBlogConfirm] = useState(false);
-  // 删除评论确认弹窗状态
-  const [showDeleteCommentConfirm, setShowDeleteCommentConfirm] = useState(false);
-  const [deletingCommentId, setDeletingCommentId] = useState<number | null>(null);
 
   useEffect(() => {
     if (isNaN(blogId)) {
@@ -61,62 +54,11 @@ export default function BlogDetailPage() {
       return;
     }
 
-    Promise.all([
-      blogApi.get(blogId),
-      commentApi.list(blogId),
-    ])
-      .then(([blogData, commentsData]) => {
-        setBlog(blogData);
-        setComments(commentsData);
-      })
+    blogApi.get(blogId)
+      .then(setBlog)
       .catch(console.error)
       .finally(() => setIsLoading(false));
   }, [blogId, router]);
-
-  const handleSubmitComment = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!token || !newComment.trim()) return;
-
-    try {
-      await commentApi.create(token, blogId, newComment.trim());
-      const updatedComments = await commentApi.list(blogId);
-      setComments(updatedComments);
-      setNewComment("");
-      showToast("Comment posted successfully", "success");
-    } catch (err) {
-      showToast(err instanceof Error ? err.message : "Failed to post comment", "error");
-    }
-  };
-
-  const handleSubmitReply = async (parentId: number) => {
-    if (!token || !replyContent.trim()) return;
-
-    try {
-      await commentApi.create(token, blogId, replyContent.trim(), parentId);
-      const updatedComments = await commentApi.list(blogId);
-      setComments(updatedComments);
-      setReplyContent("");
-      setReplyTo(null);
-      showToast("Reply posted successfully", "success");
-    } catch (err) {
-      showToast(err instanceof Error ? err.message : "Failed to post reply", "error");
-    }
-  };
-
-  const handleDeleteComment = async () => {
-    if (!token || !deletingCommentId) return;
-
-    try {
-      await commentApi.delete(token, blogId, deletingCommentId);
-      const updatedComments = await commentApi.list(blogId);
-      setComments(updatedComments);
-      setShowDeleteCommentConfirm(false);
-      setDeletingCommentId(null);
-      showToast("Comment deleted successfully", "success");
-    } catch (err) {
-      showToast(err instanceof Error ? err.message : "Failed to delete comment", "error");
-    }
-  };
 
   const handleDeleteBlog = async () => {
     if (!token) return;
@@ -138,159 +80,6 @@ export default function BlogDetailPage() {
   if (!blog) {
     return <p className="text-neutral-500">Blog not found</p>;
   }
-
-  // 滚动到指定评论
-  const scrollToComment = (commentId: number) => {
-    const element = document.getElementById(`comment-${commentId}`);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth", block: "center" });
-    }
-  };
-
-  // 渲染二级评论（只有博主可以回复，直接显示所有回复）
-  const renderSecondLevelComment = (comment: CommentTree, parentComment: CommentTree) => {
-    const isOwn = user?.id === comment.author_id;
-
-    return (
-      <div key={comment.id} id={`comment-${comment.id}`} className="mt-2 ml-8">
-        <div className={`rounded-lg border border-neutral-200 bg-white/30 p-4 ${isOwn ? "mr-8" : ""}`}>
-          <div className={`flex items-start gap-2 ${isOwn ? "flex-row-reverse" : ""}`}>
-            {/* 头像 */}
-            {comment.author_avatar ? (
-              <img
-                src={comment.author_avatar}
-                alt={comment.author_username}
-                className="h-8 w-8 rounded-full object-cover shrink-0"
-              />
-            ) : (
-              <div className="h-8 w-8 rounded-full bg-neutral-200 flex items-center justify-center text-sm shrink-0">
-                {comment.author_username.charAt(0).toUpperCase()}
-              </div>
-            )}
-            {/* 内容 */}
-            <div className={`flex-1 ${isOwn ? "text-right" : ""}`}>
-              <div className={`flex items-center gap-2 ${isOwn ? "flex-row-reverse" : ""}`}>
-                <span className="font-medium">{comment.author_username}</span>
-                <span className="text-sm text-neutral-400">reply to {parentComment.author_username}</span>
-                <span className="text-sm text-neutral-500">
-                  {formatTimeAgo(comment.created_at)}
-                </span>
-              </div>
-              <p className={`mt-2 text-neutral-700 ${isOwn ? "text-right" : ""}`}>{comment.content}</p>
-              <div className={`mt-2 flex gap-4 ${isOwn ? "justify-end" : ""}`}>
-                {/* 只有博主可以删除自己的评论 */}
-                {(user?.role === "blogger" || user?.id === comment.author_id) && (
-                  <button
-                    onClick={() => {
-                      setDeletingCommentId(comment.id);
-                      setShowDeleteCommentConfirm(true);
-                    }}
-                    className="text-sm text-red-500 hover:underline"
-                  >
-                    Delete
-                  </button>
-                )}
-              </div>
-            </div>
-            {/* 定位到父评论按钮 */}
-            <button
-              onClick={() => scrollToComment(parentComment.id)}
-              className="text-sm text-neutral-400 hover:text-neutral-600 shrink-0"
-              title="定位到父评论"
-            >
-              ↑
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  // 渲染一级评论
-  const renderFirstLevelComment = (comment: CommentTree) => {
-    const isOwn = user?.id === comment.author_id;
-    const hasReplies = comment.replies && comment.replies.length > 0;
-    const isBlogger = user?.role === "blogger";
-
-    return (
-      <div key={comment.id} id={`comment-${comment.id}`} className="mt-4">
-        <div className={`rounded-lg border border-neutral-200 bg-white/50 p-4 ${isOwn ? "ml-8" : ""}`}>
-          <div className={`flex items-start gap-2 ${isOwn ? "flex-row-reverse" : ""}`}>
-            {/* 头像 */}
-            {comment.author_avatar ? (
-              <img
-                src={comment.author_avatar}
-                alt={comment.author_username}
-                className="h-8 w-8 rounded-full object-cover shrink-0"
-              />
-            ) : (
-              <div className="h-8 w-8 rounded-full bg-neutral-200 flex items-center justify-center text-sm shrink-0">
-                {comment.author_username.charAt(0).toUpperCase()}
-              </div>
-            )}
-            {/* 内容 */}
-            <div className={`flex-1 ${isOwn ? "text-right" : ""}`}>
-              <div className="flex items-center gap-2">
-                <span className="font-medium">{comment.author_username}</span>
-                <span className="text-sm text-neutral-500">
-                  {formatTimeAgo(comment.created_at)}
-                </span>
-              </div>
-              <p className={`mt-2 text-neutral-700 ${isOwn ? "text-right" : ""}`}>{comment.content}</p>
-              <div className={`mt-2 flex gap-4 ${isOwn ? "justify-end" : ""}`}>
-                {/* 只有博主可以回复 */}
-                {isBlogger && (
-                  <button
-                    onClick={() => setReplyTo(replyTo === comment.id ? null : comment.id)}
-                    className="text-sm text-blue-500 hover:underline"
-                  >
-                    Reply
-                  </button>
-                )}
-                {/* 自己或博主可以删除 */}
-                {(user?.role === "blogger" || user?.id === comment.author_id) && (
-                  <button
-                    onClick={() => {
-                      setDeletingCommentId(comment.id);
-                      setShowDeleteCommentConfirm(true);
-                    }}
-                    className="text-sm text-red-500 hover:underline"
-                  >
-                    Delete
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* 回复输入框（只有博主可见） */}
-          {replyTo === comment.id && isBlogger && (
-            <div className="mt-3 flex gap-2">
-              <input
-                type="text"
-                value={replyContent}
-                onChange={(e) => setReplyContent(e.target.value)}
-                placeholder={`Reply to ${comment.author_username}...`}
-                className="flex-1 rounded border border-neutral-300 px-3 py-2 text-sm"
-                onKeyDown={(e) => e.key === "Enter" && handleSubmitReply(comment.id)}
-              />
-              <button
-                onClick={() => handleSubmitReply(comment.id)}
-                className="rounded bg-neutral-900 px-3 py-1 text-sm text-white"
-              >
-                Send
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* 渲染所有二级评论 */}
-        {hasReplies && comment.replies!.map((reply) => (
-          renderSecondLevelComment(reply, comment)
-        ))}
-      </div>
-    );
-  };
 
   return (
     <>
@@ -349,41 +138,6 @@ export default function BlogDetailPage() {
             </div>
           )}
         </article>
-
-        {/* Comments Section */}
-        <div className="mt-8">
-          <h2 className="mb-4 text-xl font-medium">Comments</h2>
-
-          {user ? (
-            <form onSubmit={handleSubmitComment} className="mb-6">
-              <textarea
-                value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
-                placeholder="Write a comment..."
-                className="w-full rounded border border-neutral-300 p-3 font-sans"
-                rows={3}
-              />
-              <button
-                type="submit"
-                className="mt-2 rounded bg-neutral-900 px-4 py-2 text-white"
-              >
-                Post Comment
-              </button>
-            </form>
-          ) : (
-            <p className="mb-6 text-neutral-500">
-              <Link href="/auth/login" className="text-blue-500 hover:underline">Login</Link> to leave a comment
-            </p>
-          )}
-
-          <div className="space-y-4">
-            {comments.map((comment) => renderFirstLevelComment(comment))}
-          </div>
-
-          {comments.length === 0 && (
-            <p className="text-neutral-400">No comments yet. Be the first to comment!</p>
-          )}
-        </div>
       </div>
 
       {/* 删除博客确认弹窗 */}
@@ -393,20 +147,6 @@ export default function BlogDetailPage() {
         message="Are you sure you want to delete this blog? This action cannot be undone."
         onConfirm={handleDeleteBlog}
         onCancel={() => setShowDeleteBlogConfirm(false)}
-        confirmText="Delete"
-        confirmClassName="bg-red-600 hover:bg-red-700"
-      />
-
-      {/* 删除评论确认弹窗 */}
-      <ConfirmDialog
-        open={showDeleteCommentConfirm}
-        title="Delete Comment"
-        message="Are you sure you want to delete this comment? This action cannot be undone."
-        onConfirm={handleDeleteComment}
-        onCancel={() => {
-          setShowDeleteCommentConfirm(false);
-          setDeletingCommentId(null);
-        }}
         confirmText="Delete"
         confirmClassName="bg-red-600 hover:bg-red-700"
       />
