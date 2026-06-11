@@ -240,17 +240,6 @@ export interface Blog {
   created_at: string;
   updated_at: string;
 }
-
-// 评论类型
-export interface Comment {
-  id: number;
-  blog_id: number;
-  author_id: number;
-  content: string;
-  parent_id: number | null;
-  depth: number;
-  created_at: string;
-}
 ```
 
 ### 4.2 Props 类型定义
@@ -585,7 +574,6 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
 export const authApi = { ... };
 export const userApi = { ... };
 export const blogApi = { ... };
-export const commentApi = { ... };
 export const uploadApi = { ... };
 ```
 
@@ -722,8 +710,8 @@ export default function BlogDetailPage() {
 
 | 角色 | 权限 |
 |------|------|
-| `user` | 评论、修改个人信息 |
-| `blogger` | 发布/管理博客、增删改查评论 |
+| `user` | 修改个人信息 |
+| `blogger` | 发布/管理博客 |
 | `admin` | 功能待定 |
 
 ### 10.3 条件渲染

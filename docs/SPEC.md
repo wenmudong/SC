@@ -40,8 +40,8 @@
 
 | 角色 | 说明 | 权限 |
 |------|------|------|
-| `blogger` | 博主 | 发布/管理博客、增删改查评论、个人信息管理 |
-| `user` | 普通用户 | 评论、修改个人信息 |
+| `blogger` | 博主 | 发布/管理博客、个人信息管理 |
+| `user` | 普通用户 | 修改个人信息 |
 | `admin` | 管理员 | 功能待定 |
 
 ### 预置账号
@@ -71,13 +71,11 @@ SuperCenter/
 │   │   ├── models/          # 数据模型
 │   │   │   ├── user.py       # 用户模型
 │   │   │   ├── blog.py       # 博客模型（含软删除）
-│   │   │   ├── comment.py    # 评论模型
 │   │   │   └── system.py     # 系统配置模型
 │   │   ├── routers/          # API 路由
 │   │   │   ├── auth.py       # 认证路由
 │   │   │   ├── users.py      # 用户路由
 │   │   │   ├── blogs.py      # 博客路由
-│   │   │   ├── comments.py   # 评论路由
 │   │   │   ├── upload.py     # 上传路由
 │   │   │   └── admin.py      # 管理路由
 │   │   ├── schemas/          # Pydantic Schemas
@@ -155,19 +153,6 @@ SuperCenter/
 | created_at | datetime | 创建时间 |
 | updated_at | datetime | 更新时间 |
 
-### Comment（评论）
-
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| id | int | 主键 |
-| blog_id | int | 博客 ID（外键，级联删除） |
-| author_id | int | 评论者 ID（外键） |
-| parent_id | int | 父评论 ID（支持嵌套） |
-| content | str | 评论内容 |
-| depth | int | 嵌套深度 |
-| created_at | datetime | 创建时间 |
-| updated_at | datetime | 更新时间 |
-
 ## API 路由
 
 ### 认证 API
@@ -200,14 +185,6 @@ SuperCenter/
 | GET | /api/blogs/{id} | 获取博客详情 | 否 |
 | PUT | /api/blogs/{id} | 更新博客 | 是 (blogger) |
 | DELETE | /api/blogs/{id} | 软删除博客 | 是 (blogger) |
-
-### 评论 API
-
-| 方法 | 路由 | 说明 | 认证 |
-|------|------|------|------|
-| GET | /api/blogs/{id}/comments | 获取评论列表 | 否 |
-| POST | /api/blogs/{id}/comments | 发布评论 | 是 |
-| DELETE | /api/blogs/{id}/comments/{comment_id} | 删除评论 | 是 |
 
 ## 启动方式
 

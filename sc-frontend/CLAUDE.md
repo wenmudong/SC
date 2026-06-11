@@ -167,8 +167,6 @@ import EmptyState from "@/components/EmptyState";
 ### 博客详情 (/blogs/[id])
 
 - 显示标题、副标题、Markdown 渲染内容
-- 评论功能：一级评论可展开/缩放
-- 自己发布的评论头像在右侧显示
 - 仅博主可见编辑/删除按钮
 
 ## 开发约定
