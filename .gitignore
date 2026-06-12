@@ -29,8 +29,10 @@ ENV/
 *.db-wal
 *.sqlite
 
-# Docker runtime data
-docker-data/
+# Docker data
+docker-data/database/*
+docker-data/uploads/*
+!docker-data/.gitkeep
 
 # OS
 .DS_Store
