@@ -1,4 +1,6 @@
 """数据库种子脚本 - 创建初始管理员和博主账号"""
+import os
+import sys
 from getpass import getpass
 from sqlmodel import Session, select
 from passlib.hash import argon2
@@ -17,15 +19,36 @@ def seed():
             print("数据库中已有用户，跳过种子数据创建。")
             return
 
-        print("=== 创建初始账号 ===\n")
+        # 检查是否在非交互式环境（Docker构建）
+        is_interactive = sys.stdin.isatty()
 
-        # 博主账号
-        blogger_username = input("博主用户名 [blogger]: ").strip() or "blogger"
-        blogger_email = input("博主邮箱 [blogger@example.com]: ").strip() or "blogger@example.com"
-        blogger_password = getpass("博主密码: ")
-        if not blogger_password:
-            print("密码不能为空！")
-            return
+        if is_interactive:
+            print("=== 创建初始账号 ===\n")
+
+            # 博主账号
+            blogger_username = input("博主用户名 [blogger]: ").strip() or "blogger"
+            blogger_email = input("博主邮箱 [blogger@example.com]: ").strip() or "blogger@example.com"
+            blogger_password = getpass("博主密码: ")
+            if not blogger_password:
+                print("密码不能为空！")
+                return
+
+            # 管理员账号
+            admin_username = input("\n管理员用户名 [admin]: ").strip() or "admin"
+            admin_email = input("管理员邮箱 [admin@example.com]: ").strip() or "admin@example.com"
+            admin_password = getpass("管理员密码: ")
+            if not admin_password:
+                print("密码不能为空！")
+                return
+        else:
+            # 非交互式环境（Docker构建），使用环境变量或默认值
+            print("非交互式环境，使用默认账号...")
+            blogger_username = os.getenv("SEED_BLOGGER_USERNAME", "blogger")
+            blogger_email = os.getenv("SEED_BLOGGER_EMAIL", "blogger@example.com")
+            blogger_password = os.getenv("SEED_BLOGGER_PASSWORD", "changeme123")
+            admin_username = os.getenv("SEED_ADMIN_USERNAME", "admin")
+            admin_email = os.getenv("SEED_ADMIN_EMAIL", "admin@example.com")
+            admin_password = os.getenv("SEED_ADMIN_PASSWORD", "changeme123")
 
         blogger = User(
             username=blogger_username,
@@ -34,14 +57,6 @@ def seed():
             role="blogger",
         )
         db.add(blogger)
-
-        # 管理员账号
-        admin_username = input("\n管理员用户名 [admin]: ").strip() or "admin"
-        admin_email = input("管理员邮箱 [admin@example.com]: ").strip() or "admin@example.com"
-        admin_password = getpass("管理员密码: ")
-        if not admin_password:
-            print("密码不能为空！")
-            return
 
         admin = User(
             username=admin_username,
