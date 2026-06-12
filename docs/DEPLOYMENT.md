@@ -236,7 +236,9 @@ sudo ufw status
 
 ## 八、更新部署
 
-代码更新后重新构建部署：
+### 全量更新（推荐）
+
+代码更新后重新构建所有服务：
 
 ```bash
 cd /home/ubuntu/SuperCenter
@@ -244,8 +246,36 @@ cd /home/ubuntu/SuperCenter
 # 拉取最新代码
 git pull
 
-# 重新构建并重启
+# 停止容器
+docker compose down
+
+# 重新构建并启动
 docker compose up -d --build
+```
+
+### 单服务更新
+
+如果只修改了某个服务的代码，可以只重建该服务：
+
+```bash
+# 只更新前端
+docker compose up -d --build frontend
+
+# 只更新后端
+docker compose up -d --build backend
+
+# 只更新Nginx配置
+docker compose up -d --build nginx
+```
+
+### 查看更新效果
+
+```bash
+# 查看容器状态
+docker compose ps
+
+# 查看日志确认启动成功
+docker compose logs --tail 20
 ```
 
 ## 九、数据持久化

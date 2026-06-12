@@ -22,11 +22,11 @@ COPY . .
 # 创建数据目录
 RUN mkdir -p data public/uploads
 
-# 运行种子脚本（首次启动时）
-RUN uv run python -m scripts.seed_db || true
+# 设置entrypoint.sh为可执行
+RUN chmod +x entrypoint.sh
 
 # 暴露端口
 EXPOSE 8000
 
-# 启动命令
-CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# 使用entrypoint脚本启动
+ENTRYPOINT ["./entrypoint.sh"]

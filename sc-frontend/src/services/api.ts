@@ -1,9 +1,13 @@
 // 后端 API 服务层
 import type { User, Token, Blog, BlogListItem, SystemConfig } from "@/types";
 
-// 根据当前访问地址动态推断后端地址，支持 localhost 和局域网 IP 访问
+// 根据当前访问地址动态推断后端地址
+// Docker部署（端口80）：通过Nginx代理访问 /api
+// 开发环境（其他端口）：直接访问后端 :8000/api
 const API_BASE = typeof window !== 'undefined'
-  ? `${window.location.protocol}//${window.location.hostname}:8000/api`
+  ? (window.location.port === "80" || window.location.port === "")
+    ? `${window.location.protocol}//${window.location.hostname}/api`
+    : `${window.location.protocol}//${window.location.hostname}:8000/api`
   : "http://localhost:8000/api";
 
 // 401 错误事件名称
