@@ -1,18 +1,23 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import FloatingAvatar from "@/components/FloatingAvatar";
 import Providers from "@/components/Providers";
 
-const geistSans = Geist({
+// 使用本地字体，避免Docker构建时无法访问Google Fonts的问题
+const geistSans = localFont({
+  src: "../../node_modules/geist/dist/fonts/geist-sans/Geist-Regular.woff2",
   variable: "--font-geist-sans",
-  subsets: ["latin"],
+  display: "swap",
+  fallback: ["system-ui", "arial", "sans-serif"],
 });
 
-const geistMono = Geist_Mono({
+const geistMono = localFont({
+  src: "../../node_modules/geist/dist/fonts/geist-mono/GeistMono-Regular.woff2",
   variable: "--font-geist-mono",
-  subsets: ["latin"],
+  display: "swap",
+  fallback: ["monospace"],
 });
 
 export const metadata: Metadata = {
