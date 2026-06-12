@@ -14,7 +14,7 @@ RUN pip install --no-cache-dir uv
 COPY pyproject.toml uv.lock ./
 
 # 安装依赖
-RUN uv sync --no-dev
+RUN uv sync
 
 # 复制应用代码
 COPY . .
@@ -23,10 +23,10 @@ COPY . .
 RUN mkdir -p data public/uploads
 
 # 运行种子脚本（首次启动时）
-RUN python -m scripts.seed_db || true
+RUN uv run python -m scripts.seed_db || true
 
 # 暴露端口
 EXPOSE 8000
 
 # 启动命令
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
