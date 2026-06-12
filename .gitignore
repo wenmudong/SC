@@ -21,6 +21,7 @@ ENV/
 # Environment
 .env
 .env.*
+!.env.docker
 
 # Databases
 *.db
