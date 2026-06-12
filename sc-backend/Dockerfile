@@ -22,6 +22,9 @@ COPY . .
 # 创建数据目录
 RUN mkdir -p data public/uploads
 
+# 运行种子脚本（首次启动时）
+RUN python -m scripts.seed_db || true
+
 # 暴露端口
 EXPOSE 8000
 
