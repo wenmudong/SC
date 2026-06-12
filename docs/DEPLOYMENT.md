@@ -11,6 +11,61 @@
 
 ---
 
+## Docker部署
+
+### 本地测试
+
+1. 克隆代码：
+   ```bash
+   git clone -b main <repo-url>
+   cd supercenter
+   ```
+
+2. 构建并启动：
+   ```bash
+   docker-compose up -d --build
+   ```
+
+3. 访问应用：
+   - 前端：http://localhost
+   - 后端API：http://localhost/api/health
+
+4. 查看日志：
+   ```bash
+   docker-compose logs -f
+   ```
+
+### 云服务器部署
+
+1. 上传代码到服务器：
+   ```bash
+   scp -r . user@server:/opt/supercenter
+   ```
+
+2. 在服务器上构建：
+   ```bash
+   cd /opt/supercenter
+   docker-compose up -d --build
+   ```
+
+3. 设置开机自启动：
+   ```bash
+   sudo systemctl enable docker
+   ```
+
+### 数据管理
+
+- 数据库文件：`docker-data/database/`
+- 上传文件：`docker-data/uploads/`
+
+### 资源限制
+
+- 后端：512MB内存，0.5核CPU
+- 前端：512MB内存，0.5核CPU
+- Nginx：256MB内存，0.25核CPU
+
+---
+
 ## 一、服务器基础配置
 
 SSH 登录后，先做系统更新和基础工具安装：
