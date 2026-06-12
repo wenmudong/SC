@@ -29,6 +29,9 @@ ENV/
 *.db-wal
 *.sqlite
 
+# Docker runtime data
+docker-data/
+
 # OS
 .DS_Store
 Thumbs.db
