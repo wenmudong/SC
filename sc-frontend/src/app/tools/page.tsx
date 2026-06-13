@@ -16,62 +16,6 @@ interface Tool {
 // 临时工具数据，后续可从后端获取
 const TOOLS: Tool[] = [
   {
-    id: "3",
-    title: "JSON Formatter",
-    subtitle: "Format and validate JSON data",
-    category: "Tools",
-    linkUrl: "https://example.com/json",
-  },
-  {
-    id: "4",
-    title: "UUID Generator",
-    subtitle: "Generate unique identifiers",
-    category: "Tools",
-    linkUrl: "https://example.com/uuid",
-  },
-  {
-    id: "5",
-    title: "Base64 Encoder",
-    subtitle: "Encode and decode Base64 strings",
-    category: "Tools",
-    linkUrl: "https://example.com/base64",
-  },
-  {
-    id: "6",
-    title: "Password Generator",
-    subtitle: "Generate secure random passwords",
-    category: "Tools",
-    linkUrl: "https://example.com/password",
-  },
-  {
-    id: "7",
-    title: "URL Encoder",
-    subtitle: "Encode and decode URL strings",
-    category: "Tools",
-    linkUrl: "https://example.com/url",
-  },
-  {
-    id: "8",
-    title: "Hash Generator",
-    subtitle: "Generate MD5, SHA-1, SHA-256 hashes",
-    category: "Tools",
-    linkUrl: "https://example.com/hash",
-  },
-  {
-    id: "9",
-    title: "Regex Tester",
-    subtitle: "Test and debug regular expressions",
-    category: "Tools",
-    linkUrl: "https://example.com/regex",
-  },
-  {
-    id: "10",
-    title: "Cron Expression",
-    subtitle: "Validate and parse cron expressions",
-    category: "Tools",
-    linkUrl: "https://example.com/cron",
-  },
-  {
     id: "compress",
     title: "Image Compress",
     subtitle: "Batch compress and convert images",
