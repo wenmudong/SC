@@ -50,6 +50,7 @@ Thumbs.db
 # Local assets
 Question/
 .claude/
+.superpowers/
 
 # Personal files
 docs/private/
