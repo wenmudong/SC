@@ -88,7 +88,7 @@ export default function Navbar() {
       <div className={`pointer-events-auto relative flex rounded-lg border border-neutral-200 p-1 shadow-md ${getNavbarBgClass()}`}>
         {/* 滑动指示器 */}
         <div
-          className="absolute left-0 -z-10 h-7 rounded bg-neutral-200 backdrop-blur transition-[width,transform] duration-150"
+          className="absolute left-0 -z-10 h-7 rounded bg-neutral-200 backdrop-blur transition-[width,transform] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
           style={{ width: indicatorStyle.width, transform: indicatorStyle.transform }}
         />
         {navItems.map((item: { label: string; label_zh?: string; href: string; visible?: boolean }, index: number) => (
