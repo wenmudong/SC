@@ -9,7 +9,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 interface Tool {
   id: string;
   title: string;
-  subtitle?: string;
+  subtitleKey: string;
   category?: string;
   linkUrl?: string;
 }
@@ -19,7 +19,7 @@ const TOOLS: Tool[] = [
   {
     id: "compress",
     title: "Image Compress",
-    subtitle: "Batch compress and convert images",
+    subtitleKey: "tools.batchCompress",
     category: "Tools",
     linkUrl: "/tools/compress",
   },
@@ -112,7 +112,7 @@ export default function ToolsPage() {
                 id={tool.id}
                 category={tool.category}
                 title={tool.title}
-                subtitle={tool.subtitle}
+                subtitle={t(tool.subtitleKey)}
                 link={tool.linkUrl ? { url: tool.linkUrl, external: !tool.linkUrl.startsWith("/") } : undefined}
               />
             ))}
