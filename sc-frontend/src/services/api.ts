@@ -79,7 +79,7 @@ export const userApi = {
   getMe: (token: string) =>
     request<User>("/users/me", { token }),
 
-  updateMe: (token: string, data: { email?: string; avatar_url?: string }) =>
+  updateMe: (token: string, data: { email?: string; avatar_url?: string; language?: string }) =>
     request<User>("/users/me", {
       method: "PATCH",
       body: data,

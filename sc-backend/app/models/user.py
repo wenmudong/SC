@@ -10,6 +10,11 @@ class UserRole(str, Enum):
     ADMIN = "admin"      # 管理员：功能待定
 
 
+class UserLanguage(str, Enum):
+    EN = "en"  # 英文
+    ZH = "zh"  # 中文
+
+
 class User(SQLModel, table=True):
     """用户模型"""
     __tablename__ = "users"
@@ -19,6 +24,7 @@ class User(SQLModel, table=True):
     email: str = Field(unique=True, index=True)
     password_hash: str
     avatar_url: Optional[str] = Field(default=None)
+    language: str = Field(default=UserLanguage.EN.value)
     role: str = Field(default=UserRole.USER.value)
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)

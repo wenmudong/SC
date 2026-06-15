@@ -12,7 +12,7 @@ interface AuthContextType {
   login: (username: string, password: string) => Promise<void>;
   register: (username: string, email: string, password: string) => Promise<void>;
   logout: () => void;
-  updateUser: (data: { email?: string; avatar_url?: string }) => Promise<void>;
+  updateUser: (data: { email?: string; avatar_url?: string; language?: string }) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -67,7 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     router.push("/");
   }, [router]);
 
-  const updateUser = useCallback(async (data: { email?: string; avatar_url?: string }) => {
+  const updateUser = useCallback(async (data: { email?: string; avatar_url?: string; language?: string }) => {
     if (!token) throw new Error("Not authenticated");
     const updated = await userApi.updateMe(token, data);
     setUser(updated);

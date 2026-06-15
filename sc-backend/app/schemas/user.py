@@ -41,12 +41,14 @@ class UserUpdate(BaseModel):
     """更新个人信息"""
     email: Optional[EmailStr] = None
     avatar_url: Optional[str] = None
+    language: Optional[str] = None
 
 
 class UserResponse(UserBase):
     """用户响应"""
     id: int
     avatar_url: Optional[str] = None
+    language: str = "en"
     role: str
     created_at: datetime
 

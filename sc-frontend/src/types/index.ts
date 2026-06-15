@@ -1,11 +1,13 @@
 // 用户类型
 export type UserRole = "blogger" | "user" | "admin";
+export type UserLanguage = "en" | "zh";
 
 export interface User {
   id: number;
   username: string;
   email: string;
   avatar_url: string | null;
+  language: UserLanguage;
   role: UserRole;
   created_at: string;
 }

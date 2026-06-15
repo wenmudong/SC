@@ -45,6 +45,14 @@ def update_my_profile(
     if data.avatar_url is not None:
         user.avatar_url = data.avatar_url
 
+    if data.language is not None:
+        if data.language not in ["en", "zh"]:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="language 必须是 en 或 zh",
+            )
+        user.language = data.language
+
     db.add(user)
     db.commit()
     db.refresh(user)

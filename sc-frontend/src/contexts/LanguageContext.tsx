@@ -2,11 +2,13 @@
 
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
 import { getTranslation } from "@/i18n";
+import { useAuth } from "@/contexts/AuthContext";
 
 type Language = "en" | "zh";
 
 interface LanguageContextType {
   language: Language;
+  setLanguage: (lang: Language) => void;
   toggleLanguage: () => void;
   t: (key: string) => string;
 }
@@ -22,19 +24,42 @@ function getInitialLanguage(): Language {
 }
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguage] = useState<Language>(getInitialLanguage);
+  const { user, updateUser } = useAuth();
+  const [language, setLanguageState] = useState<Language>(getInitialLanguage);
+
+  // 用户登录后，从用户信息初始化语言
+  useEffect(() => {
+    if (user?.language) {
+      const userLang = user.language === "zh" ? "zh" : "en";
+      setLanguageState(userLang);
+      localStorage.setItem(STORAGE_KEY, userLang);
+      document.documentElement.lang = userLang;
+    }
+  }, [user]);
 
   useEffect(() => {
     document.documentElement.lang = language;
   }, [language]);
 
+  const setLanguage = useCallback(async (lang: Language) => {
+    setLanguageState(lang);
+    localStorage.setItem(STORAGE_KEY, lang);
+    document.documentElement.lang = lang;
+
+    // 如果用户已登录，同步到后端
+    if (user) {
+      try {
+        await updateUser({ language: lang });
+      } catch (error) {
+        console.error("Failed to save language preference:", error);
+      }
+    }
+  }, [user, updateUser]);
+
   const toggleLanguage = useCallback(() => {
-    setLanguage((prev) => {
-      const next = prev === "en" ? "zh" : "en";
-      localStorage.setItem(STORAGE_KEY, next);
-      return next;
-    });
-  }, []);
+    const next = language === "en" ? "zh" : "en";
+    setLanguage(next);
+  }, [language, setLanguage]);
 
   const t = useCallback(
     (key: string) => getTranslation(language, key),
@@ -42,7 +67,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   );
 
   return (
-    <LanguageContext.Provider value={{ language, toggleLanguage, t }}>
+    <LanguageContext.Provider value={{ language, setLanguage, toggleLanguage, t }}>
       {children}
     </LanguageContext.Provider>
   );
