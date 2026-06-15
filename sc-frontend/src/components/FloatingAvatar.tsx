@@ -81,7 +81,11 @@ export default function FloatingAvatar() {
             onClick={toggleLanguage}
             className="w-full px-4 py-2 text-left text-sm text-neutral-600 hover:bg-neutral-50"
           >
-            {language === "en" ? "EN/中" : "中/EN"}
+            {language === "en" ? (
+              <><span className="text-neutral-900">EN</span>/中</>
+            ) : (
+              <><span className="text-neutral-900">中</span>/EN</>
+            )}
           </button>
           <div className="border-t border-neutral-100" />
           {user.role === "admin" && (
