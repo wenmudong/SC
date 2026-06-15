@@ -10,8 +10,8 @@ import LoginModal from "@/components/LoginModal";
 
 export default function Providers({ children }: { children: ReactNode }) {
   return (
-    <LanguageProvider>
-      <AuthProvider>
+    <AuthProvider>
+      <LanguageProvider>
         <SystemConfigProvider>
           <ToastProvider>
             <AuthModalProvider>
@@ -20,7 +20,7 @@ export default function Providers({ children }: { children: ReactNode }) {
             </AuthModalProvider>
           </ToastProvider>
         </SystemConfigProvider>
-      </AuthProvider>
-    </LanguageProvider>
+      </LanguageProvider>
+    </AuthProvider>
   );
 }
