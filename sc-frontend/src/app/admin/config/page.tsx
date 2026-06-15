@@ -5,10 +5,12 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSystemConfig } from "@/contexts/SystemConfigContext";
 import { useToast } from "@/components/Toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 import GradientText from "@/components/GradientText";
 
 interface NavItem {
   label: string;
+  label_zh?: string;
   href: string;
   visible: boolean;
 }
@@ -28,11 +30,11 @@ interface NavbarConfig {
 const DEFAULT_NAVBAR_CONFIG: NavbarConfig = {
   style: "blur",
   nav_items: [
-    { label: "Wenmudong", href: "/", visible: true },
-    { label: "Blogs", href: "/blogs", visible: true },
-    { label: "Projects", href: "/projects", visible: true },
-    { label: "Hobbies", href: "/hobbies", visible: true },
-    { label: "Tools", href: "/tools", visible: true },
+    { label: "Wenmudong", label_zh: "Wenmudong", href: "/", visible: true },
+    { label: "Blogs", label_zh: "博客", href: "/blogs", visible: true },
+    { label: "Projects", label_zh: "项目", href: "/projects", visible: true },
+    { label: "Hobbies", label_zh: "爱好", href: "/hobbies", visible: true },
+    { label: "Tools", label_zh: "工具", href: "/tools", visible: true },
   ],
   right_links: [
     { label: "Github", href: "https://github.com/wenmudong", visible: true },
@@ -44,6 +46,7 @@ export default function AdminConfigPage() {
   const { user, isLoading: authLoading } = useAuth();
   const { configs, saveConfig, isLoading } = useSystemConfig();
   const { showToast } = useToast();
+  const { t } = useLanguage();
   const [isSaving, setIsSaving] = useState(false);
   const [tempNavbarConfig, setTempNavbarConfig] = useState<NavbarConfig>(DEFAULT_NAVBAR_CONFIG);
   const [tempFont, setTempFont] = useState("");
@@ -106,14 +109,14 @@ export default function AdminConfigPage() {
   const addNavItem = () => {
     setTempNavbarConfig((prev) => ({
       ...prev,
-      nav_items: [...prev.nav_items, { label: "New", href: "/", visible: true }],
+      nav_items: [...prev.nav_items, { label: "New", label_zh: "", href: "/", visible: true }],
     }));
   };
 
   // 删除导航项（至少保留一个）
   const removeNavItem = (index: number) => {
     if (tempNavbarConfig.nav_items.length <= 1) {
-      showToast("至少需要保留一个导航项", "error");
+      showToast(t("admin.至少保留一个导航项"), "error");
       return;
     }
     setTempNavbarConfig((prev) => {
@@ -127,7 +130,7 @@ export default function AdminConfigPage() {
   const toggleNavItemVisible = (index: number) => {
     const item = tempNavbarConfig.nav_items[index];
     if (item.visible && !hasVisibleNavItem()) {
-      showToast("至少需要保留一个可见的导航项", "error");
+      showToast(t("admin.至少保留一个可见的导航项"), "error");
       return;
     }
     updateNavItem(index, "visible", !item.visible);
@@ -221,7 +224,7 @@ export default function AdminConfigPage() {
   // 保存所有配置
   const handleSaveAll = async () => {
     if (!hasVisibleNavItem()) {
-      showToast("至少需要保留一个可见的导航项", "error");
+      showToast(t("admin.至少保留一个可见的导航项"), "error");
       return;
     }
 
@@ -237,9 +240,9 @@ export default function AdminConfigPage() {
         await saveConfig("navbar_config", navbarConfigStr);
       }
 
-      showToast("保存成功", "success");
+      showToast(t("admin.saveSuccess"), "success");
     } catch {
-      showToast("保存失败", "error");
+      showToast(t("admin.saveFailed"), "error");
     } finally {
       setIsSaving(false);
     }
@@ -251,7 +254,7 @@ export default function AdminConfigPage() {
   if (authLoading || isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <GradientText className="text-lg">加载中...</GradientText>
+        <GradientText className="text-lg">{t("admin.loading")}</GradientText>
       </div>
     );
   }
@@ -267,9 +270,9 @@ export default function AdminConfigPage() {
         <div className="sticky top-16 z-50 flex items-center justify-between bg-white/95 backdrop-blur-md py-4">
           <div>
             <h1 className="font-sans text-4xl font-extralight text-neutral-900">
-              <GradientText>系统配置</GradientText>
+              <GradientText>{t("admin.systemConfig")}</GradientText>
             </h1>
-            <p className="mt-2 text-sm text-neutral-500">配置网站的全局设置</p>
+            <p className="mt-2 text-sm text-neutral-500">{t("admin.configDescription")}</p>
           </div>
           <button
             ref={saveButtonRef}
@@ -277,7 +280,7 @@ export default function AdminConfigPage() {
             disabled={isSaving || !hasChanges}
             className="rounded bg-neutral-900 px-4 py-2 text-sm text-white transition-colors hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {isSaving ? "保存中..." : "保存全部"}
+            {isSaving ? t("admin.saving") : t("admin.saveAll")}
           </button>
         </div>
 
@@ -286,51 +289,51 @@ export default function AdminConfigPage() {
           {/* 全局字体 */}
           <div className="rounded-lg border border-neutral-200 bg-white/50 p-4 backdrop-blur-sm">
             <div className="mb-2 flex items-center justify-between">
-              <label className="text-sm font-medium text-neutral-900">全局字体</label>
+              <label className="text-sm font-medium text-neutral-900">{t("admin.globalFont")}</label>
               <span className="text-xs text-neutral-400">global_font</span>
             </div>
-            <p className="mb-3 text-xs text-neutral-500">设置网站使用的字体</p>
+            <p className="mb-3 text-xs text-neutral-500">{t("admin.fontDescription")}</p>
             <select
               value={tempFont}
               onChange={(e) => setTempFont(e.target.value)}
               className="w-full rounded border border-neutral-300 bg-white px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
             >
-              <option value="FusionPixel">像素字体 (FusionPixel)</option>
-              <option value="var(--font-geist-sans)">系统字体 (Geist)</option>
+              <option value="FusionPixel">{t("admin.pixelFont")}</option>
+              <option value="var(--font-geist-sans)">{t("admin.systemFont")}</option>
             </select>
           </div>
 
           {/* 导航栏配置 */}
           <div className="rounded-lg border border-neutral-200 bg-white/50 p-4 backdrop-blur-sm">
             <div className="mb-2 flex items-center justify-between">
-              <label className="text-sm font-medium text-neutral-900">导航栏配置</label>
+              <label className="text-sm font-medium text-neutral-900">{t("admin.navbarConfig")}</label>
               <span className="text-xs text-neutral-400">navbar_config</span>
             </div>
-            <p className="mb-3 text-xs text-neutral-500">设置导航栏的样式、导航项和链接</p>
+            <p className="mb-3 text-xs text-neutral-500">{t("admin.navbarDescription")}</p>
 
             {/* 导航栏样式 */}
             <div className="mb-4">
-              <span className="mb-2 block text-xs font-medium text-neutral-700">导航栏样式</span>
+              <span className="mb-2 block text-xs font-medium text-neutral-700">{t("admin.navbarStyle")}</span>
               <select
                 value={tempNavbarConfig.style}
                 onChange={(e) => setTempNavbarConfig((prev) => ({ ...prev, style: e.target.value }))}
                 className="w-full rounded border border-neutral-300 bg-white px-3 py-2 text-sm"
               >
-                <option value="blur">毛玻璃</option>
-                <option value="solid">实色</option>
-                <option value="transparent">透明</option>
+                <option value="blur">{t("admin.blur")}</option>
+                <option value="solid">{t("admin.solid")}</option>
+                <option value="transparent">{t("admin.transparent")}</option>
               </select>
             </div>
 
             {/* 导航项 */}
             <div className="mb-4">
               <div className="mb-2 flex items-center justify-between">
-                <span className="text-xs font-medium text-neutral-700">导航项</span>
+                <span className="text-xs font-medium text-neutral-700">{t("admin.navItems")}</span>
                 <button
                   onClick={addNavItem}
                   className="text-xs text-blue-500 hover:underline"
                 >
-                  + 添加
+                  {t("admin.add")}
                 </button>
               </div>
               <div className="space-y-2">
@@ -341,14 +344,14 @@ export default function AdminConfigPage() {
                     onDragStart={(e) => handleNavItemDragStart(e, index)}
                     onDragOver={(e) => handleNavItemDragOver(e, index)}
                     onDragEnd={handleNavItemDragEnd}
-                    className={`flex items-center gap-2 rounded border bg-white p-2 cursor-move ${
+                    className={`flex items-center gap-1 rounded border bg-white p-2 cursor-move ${
                       draggedIndex === index ? "border-blue-400 opacity-50" : "border-neutral-200"
                     }`}
                   >
                     {/* 可见切换 - 绿色=显示，红色=隐藏 */}
                     <button
                       onClick={() => toggleNavItemVisible(index)}
-                      className={`text-xs px-1 ${item.visible ? "text-green-500" : "text-red-500"}`}
+                      className={`shrink-0 text-xs px-1 ${item.visible ? "text-green-500" : "text-red-500"}`}
                       title={item.visible ? "显示中 - 点击隐藏" : "已隐藏 - 点击显示"}
                     >
                       {item.visible ? "●" : "○"}
@@ -357,22 +360,29 @@ export default function AdminConfigPage() {
                       type="text"
                       value={item.label}
                       onChange={(e) => updateNavItem(index, "label", e.target.value)}
-                      placeholder="文案"
-                      className="flex-1 rounded border border-neutral-300 px-2 py-1 text-sm"
+                      placeholder="English"
+                      className="min-w-0 flex-1 rounded border border-neutral-300 px-2 py-1 text-sm"
+                    />
+                    <input
+                      type="text"
+                      value={item.label_zh || ""}
+                      onChange={(e) => updateNavItem(index, "label_zh", e.target.value)}
+                      placeholder={t("admin.chineseName")}
+                      className="min-w-0 flex-1 rounded border border-neutral-300 px-2 py-1 text-sm"
                     />
                     <input
                       type="text"
                       value={item.href}
                       onChange={(e) => updateNavItem(index, "href", e.target.value)}
                       placeholder="/path"
-                      className="flex-1 rounded border border-neutral-300 px-2 py-1 text-sm"
+                      className="min-w-0 flex-1 rounded border border-neutral-300 px-2 py-1 text-sm"
                     />
                     <button
                       onClick={() => removeNavItem(index)}
                       disabled={tempNavbarConfig.nav_items.length <= 1}
-                      className="text-xs text-red-500 hover:underline disabled:opacity-30"
+                      className="shrink-0 text-xs text-red-500 hover:underline disabled:opacity-30"
                     >
-                      删除
+                      {t("admin.delete")}
                     </button>
                   </div>
                 ))}
@@ -382,12 +392,12 @@ export default function AdminConfigPage() {
             {/* 右侧链接 */}
             <div>
               <div className="mb-2 flex items-center justify-between">
-                <span className="text-xs font-medium text-neutral-700">右侧链接</span>
+                <span className="text-xs font-medium text-neutral-700">{t("admin.rightLinks")}</span>
                 <button
                   onClick={addRightLink}
                   className="text-xs text-blue-500 hover:underline"
                 >
-                  + 添加
+                  {t("admin.add")}
                 </button>
               </div>
               <div className="space-y-2">
@@ -398,14 +408,14 @@ export default function AdminConfigPage() {
                     onDragStart={(e) => handleRightLinkDragStart(e, index)}
                     onDragOver={(e) => handleRightLinkDragOver(e, index)}
                     onDragEnd={handleRightLinkDragEnd}
-                    className={`flex items-center gap-2 rounded border bg-white p-2 cursor-move ${
+                    className={`flex items-center gap-1 rounded border bg-white p-2 cursor-move ${
                       draggedIndex === index ? "border-blue-400 opacity-50" : "border-neutral-200"
                     }`}
                   >
                     {/* 可见切换 - 绿色=显示，红色=隐藏 */}
                     <button
                       onClick={() => toggleRightLinkVisible(index)}
-                      className={`text-xs px-1 ${link.visible ? "text-green-500" : "text-red-500"}`}
+                      className={`shrink-0 text-xs px-1 ${link.visible ? "text-green-500" : "text-red-500"}`}
                       title={link.visible ? "显示中 - 点击隐藏" : "已隐藏 - 点击显示"}
                     >
                       {link.visible ? "●" : "○"}
@@ -414,21 +424,21 @@ export default function AdminConfigPage() {
                       type="text"
                       value={link.label}
                       onChange={(e) => updateRightLink(index, "label", e.target.value)}
-                      placeholder="文案"
-                      className="flex-1 rounded border border-neutral-300 px-2 py-1 text-sm"
+                      placeholder="Label"
+                      className="min-w-0 flex-1 rounded border border-neutral-300 px-2 py-1 text-sm"
                     />
                     <input
                       type="text"
                       value={link.href}
                       onChange={(e) => updateRightLink(index, "href", e.target.value)}
                       placeholder="https://"
-                      className="flex-1 rounded border border-neutral-300 px-2 py-1 text-sm"
+                      className="min-w-0 flex-1 rounded border border-neutral-300 px-2 py-1 text-sm"
                     />
                     <button
                       onClick={() => removeRightLink(index)}
-                      className="text-xs text-red-500 hover:underline"
+                      className="shrink-0 text-xs text-red-500 hover:underline"
                     >
-                      删除
+                      {t("admin.delete")}
                     </button>
                   </div>
                 ))}
@@ -440,8 +450,7 @@ export default function AdminConfigPage() {
         {/* 提示信息 */}
         <div className="mt-8 rounded-lg border border-neutral-200 bg-white/30 p-4 backdrop-blur-sm">
           <p className="text-xs text-neutral-500">
-            <span className="font-medium text-neutral-700">提示：</span>
-            拖拽可调整顺序，● 绿色=显示，○ 红色=隐藏。至少保留一个可见导航项。
+            {t("admin.dragHint")}
           </p>
         </div>
       </div>

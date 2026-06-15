@@ -5,12 +5,14 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAuthModal } from "@/hooks/useAuthModal";
 import { useToast } from "@/components/Toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type AuthTab = "login" | "register";
 
 export default function LoginModal() {
   const { isAuthModalOpen, closeAuthModal } = useAuthModal();
   const { showToast } = useToast();
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<AuthTab>("login");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -51,22 +53,22 @@ export default function LoginModal() {
     try {
       // 注册时验证两次密码
       if (activeTab === "register" && password !== confirmPassword) {
-        showToast("Passwords do not match", "error");
+        showToast(t("loginModal.passwordsDoNotMatch"), "error");
         setIsLoading(false);
         return;
       }
 
       if (activeTab === "login") {
         await login(username, password);
-        showToast("Login successful", "success");
+        showToast(t("loginModal.loginSuccess"), "success");
       } else {
         await register(username, email, password);
-        showToast("Registration successful", "success");
+        showToast(t("loginModal.registerSuccess"), "success");
       }
       closeAuthModal();
       router.refresh();
     } catch (err) {
-      showToast(err instanceof Error ? err.message : "Operation failed", "error");
+      showToast(err instanceof Error ? err.message : t("loginModal.operationFailed"), "error");
     } finally {
       setIsLoading(false);
     }
@@ -84,13 +86,13 @@ export default function LoginModal() {
       <div className="relative w-full max-w-sm rounded-2xl bg-white p-8 shadow-2xl">
         {/* 标题 */}
         <h2 className="mb-6 text-center text-2xl font-semibold text-neutral-900">
-          {activeTab === "login" ? "Login" : "Register"}
+          {activeTab === "login" ? t("loginModal.login") : t("loginModal.register")}
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label htmlFor="username" className="mb-1.5 block text-sm font-medium text-neutral-700">
-              Username
+              {t("loginModal.username")}
             </label>
             <input
               id="username"
@@ -98,7 +100,7 @@ export default function LoginModal() {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               className="w-full rounded-lg border border-neutral-200 px-4 py-2.5 text-neutral-900 placeholder-neutral-400 transition-colors focus:border-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-100"
-              placeholder="Enter username"
+              placeholder={t("loginModal.enterUsername")}
               required
             />
           </div>
@@ -106,7 +108,7 @@ export default function LoginModal() {
           {activeTab === "register" && (
             <div>
               <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-neutral-700">
-                Email
+                {t("loginModal.email")}
               </label>
               <input
                 id="email"
@@ -114,7 +116,7 @@ export default function LoginModal() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full rounded-lg border border-neutral-200 px-4 py-2.5 text-neutral-900 placeholder-neutral-400 transition-colors focus:border-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-100"
-                placeholder="Enter email"
+                placeholder={t("loginModal.enterEmail")}
                 required
               />
             </div>
@@ -122,7 +124,7 @@ export default function LoginModal() {
 
           <div>
             <label htmlFor="password" className="mb-1.5 block text-sm font-medium text-neutral-700">
-              Password
+              {t("loginModal.password")}
             </label>
             <input
               id="password"
@@ -130,7 +132,7 @@ export default function LoginModal() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full rounded-lg border border-neutral-200 px-4 py-2.5 text-neutral-900 placeholder-neutral-400 transition-colors focus:border-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-100"
-              placeholder="Enter password"
+              placeholder={t("loginModal.enterPassword")}
               required
             />
           </div>
@@ -138,7 +140,7 @@ export default function LoginModal() {
           {activeTab === "register" && (
             <div>
               <label htmlFor="confirmPassword" className="mb-1.5 block text-sm font-medium text-neutral-700">
-                Confirm Password
+                {t("loginModal.confirmPassword")}
               </label>
               <input
                 id="confirmPassword"
@@ -146,7 +148,7 @@ export default function LoginModal() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className="w-full rounded-lg border border-neutral-200 px-4 py-2.5 text-neutral-900 placeholder-neutral-400 transition-colors focus:border-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-100"
-                placeholder="Confirm password"
+                placeholder={t("loginModal.confirmPlaceholder")}
                 required
               />
             </div>
@@ -157,21 +159,21 @@ export default function LoginModal() {
             disabled={isLoading}
             className="w-full rounded-lg bg-neutral-900 py-2.5 text-white transition-colors hover:bg-neutral-800 disabled:opacity-50"
           >
-            {isLoading ? "Loading..." : activeTab === "login" ? "Login" : "Register"}
+            {isLoading ? t("loginModal.loading") : activeTab === "login" ? t("loginModal.login") : t("loginModal.register")}
           </button>
         </form>
 
         {/* Tab 切换 */}
         <div className="mt-6 flex items-center justify-center gap-2 text-sm">
           <span className="text-neutral-500">
-            {activeTab === "login" ? "No account?" : "Have an account?"}
+            {activeTab === "login" ? t("loginModal.noAccount") : t("loginModal.hasAccount")}
           </span>
           <button
             type="button"
             onClick={() => setActiveTab(activeTab === "login" ? "register" : "login")}
             className="font-medium text-neutral-900 underline underline-offset-2 hover:text-neutral-600"
           >
-            {activeTab === "login" ? "Register" : "Login"}
+            {activeTab === "login" ? t("loginModal.register") : t("loginModal.login")}
           </button>
         </div>
 

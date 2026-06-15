@@ -4,12 +4,14 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAuthModal } from "@/hooks/useAuthModal";
+import { useLanguage } from "@/contexts/LanguageContext";
 import PageHeader from "@/components/PageHeader";
 import { uploadApi } from "@/services/api";
 
 export default function ProfilePage() {
   const { user, token, isLoading, updateUser, logout } = useAuth();
   const { openAuthModal } = useAuthModal();
+  const { t } = useLanguage();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -45,7 +47,7 @@ export default function ProfilePage() {
     try {
       const result = await uploadApi.uploadAvatar(token, file);
       await updateUser({ avatar_url: result.url });
-      setMessage("Avatar updated successfully!");
+      setMessage(t("profile.avatarUpdated"));
     } catch (err) {
       setMessage(err instanceof Error ? err.message : "Upload failed");
     } finally {
@@ -66,7 +68,7 @@ export default function ProfilePage() {
 
     try {
       await updateUser({ email });
-      setMessage("Profile updated successfully!");
+      setMessage(t("profile.profileUpdated"));
     } catch (err) {
       setMessage(err instanceof Error ? err.message : "Update failed");
     } finally {
@@ -77,7 +79,7 @@ export default function ProfilePage() {
   if (isLoading || !user) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <p className="text-neutral-500">Loading...</p>
+        <p className="text-neutral-500">{t("profile.loading")}</p>
       </div>
     );
   }
@@ -86,7 +88,7 @@ export default function ProfilePage() {
     <>
       <PageHeader
         // title="profile."
-        description="Manage your account"
+        description={t("profile.manageAccount")}
       />
 
       <div className="mx-auto max-w-lg">
@@ -99,7 +101,7 @@ export default function ProfilePage() {
               className="group relative flex h-24 w-24 items-center justify-center rounded-full bg-neutral-200 transition-all hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isUploadingAvatar ? (
-                <span className="text-sm text-neutral-500">Uploading...</span>
+                <span className="text-sm text-neutral-500">{t("profile.uploading")}</span>
               ) : user.avatar_url ? (
                 <img
                   src={user.avatar_url}
@@ -116,7 +118,7 @@ export default function ProfilePage() {
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-8 w-8 text-white">
                   <path fillRule="evenodd" d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2v-3a1 1 0 10-2 0v3H5a1 1 0 01-1-1V7a1 1 0 012 0v2h9v3a1 1 0 11-2 0v-3h2a2 2 0 002-2V7a2 2 0 00-2-2H4z" clipRule="evenodd" />
                 </svg>
-                <span className="mt-1 text-xs text-white">Change</span>
+                <span className="mt-1 text-xs text-white">{t("profile.change")}</span>
               </div>
             </button>
             <input
@@ -131,11 +133,11 @@ export default function ProfilePage() {
           {/* User Info */}
           <div className="mb-6 rounded bg-neutral-50 p-4">
             <div className="flex justify-between">
-              <span className="text-sm text-neutral-500">Username</span>
+              <span className="text-sm text-neutral-500">{t("profile.username")}</span>
               <span className="font-medium">{user.username}</span>
             </div>
             <div className="mt-2 flex justify-between">
-              <span className="text-sm text-neutral-500">Role</span>
+              <span className="text-sm text-neutral-500">{t("profile.role")}</span>
               <span className="rounded px-2 py-0.5 text-sm font-medium bg-neutral-200">
                 {user.role}
               </span>
@@ -152,7 +154,7 @@ export default function ProfilePage() {
 
             <div>
               <label htmlFor="email" className="mb-1 block text-sm text-neutral-600">
-                Email
+                {t("profile.email")}
               </label>
               <input
                 id="email"
@@ -169,7 +171,7 @@ export default function ProfilePage() {
               disabled={isSaving}
               className="w-full rounded bg-neutral-900 py-2 font-sans text-white transition-colors hover:bg-neutral-800 disabled:opacity-50"
             >
-              {isSaving ? "Saving..." : "Update Profile"}
+              {isSaving ? t("profile.saving") : t("profile.updateProfile")}
             </button>
           </form>
 
@@ -178,7 +180,7 @@ export default function ProfilePage() {
               onClick={handleLogout}
               className="w-full rounded bg-red-50 py-2 font-sans text-sm text-red-600 transition-colors hover:bg-red-100"
             >
-              Logout
+              {t("profile.logout")}
             </button>
           </div>
         </div>

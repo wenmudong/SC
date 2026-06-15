@@ -7,17 +7,12 @@ import BlogCard from "@/components/Cards/BlogCard";
 import EmptyState from "@/components/EmptyState";
 import Loading from "@/components/Loading";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
 import { blogApi } from "@/services/api";
 import type { BlogListItem, BlogCategory } from "@/types";
 
-const BLOG_CATEGORIES: { value: BlogCategory | 'ALL'; label: string }[] = [
-  { value: "ALL", label: "All" },
-  { value: "Tech", label: "Tech" },
-  { value: "Emotion", label: "Emotion" },
-  { value: "Diary", label: "Diary" },
-  { value: "Question", label: "Question" },
-];
+const BLOG_CATEGORIES: (BlogCategory | 'ALL')[] = ["ALL", "Tech", "Emotion", "Diary", "Question"];
 
 export default function BlogsPage() {
   const [blogs, setBlogs] = useState<BlogListItem[]>([]);
@@ -25,6 +20,7 @@ export default function BlogsPage() {
   const [selectedCategory, setSelectedCategory] = useState<BlogCategory | "ALL">("ALL");
   const { user } = useAuth();
   const { isReady } = useAuthGuard();
+  const { t } = useLanguage();
 
   useEffect(() => {
     blogApi.list()
@@ -64,20 +60,20 @@ export default function BlogsPage() {
           {/* 第二行: posts 描述 + 分类筛选 */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <p className="text-lm text-neutral-400">
-              {filteredBlogs.length} {"Posts"} · Wenmudong&apos;s thoughts and writings.
+              {filteredBlogs.length} {t("blogs.posts")} · {t("blogs.thoughts")}
             </p>
             <div className="flex gap-2 flex-wrap">
               {BLOG_CATEGORIES.map(cat => (
                 <button
-                  key={cat.value}
-                  onClick={() => setSelectedCategory(cat.value)}
+                  key={cat}
+                  onClick={() => setSelectedCategory(cat)}
                   className={`px-3 py-1 rounded text-sm transition-colors ${
-                    selectedCategory === cat.value
+                    selectedCategory === cat
                       ? "bg-neutral-900 text-white"
                       : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
                   }`}
                 >
-                  {cat.label}
+                  {t(`blogs.${cat.toLowerCase()}`)}
                 </button>
               ))}
             </div>
@@ -87,10 +83,10 @@ export default function BlogsPage() {
 
       {/* 博客列表区域 */}
       {isLoading ? (
-        <Loading message="Thinking..." />
+        <Loading message={t("blogs.thinking")} />
       ) : filteredBlogs.length === 0 ? (
         <>
-          <EmptyState message="No blogs yet." />
+          <EmptyState message={t("blogs.noBlogs")} />
           {user?.role === "blogger" && (
             <Link
               href="/blogs/new"
@@ -101,7 +97,7 @@ export default function BlogsPage() {
                   <path d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" />
                 </svg>
               </div>
-              <span className="text-neutral-500">Write a new blog</span>
+              <span className="text-neutral-500">{t("blogs.writeNew")}</span>
             </Link>
           )}
         </>

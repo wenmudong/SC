@@ -6,15 +6,16 @@ import { usePathname } from "next/navigation";
 import { useSystemConfig } from "@/contexts/SystemConfigContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAuthModal } from "@/hooks/useAuthModal";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const DEFAULT_NAVBAR_CONFIG = {
   style: "blur",
   nav_items: [
-    { label: "Wenmudong", href: "/", visible: true },
-    { label: "Blogs", href: "/blogs", visible: true },
-    { label: "Projects", href: "/projects", visible: true },
-    { label: "Hobbies", href: "/hobbies", visible: true },
-    { label: "Tools", href: "/tools", visible: true },
+    { label: "Wenmudong", label_zh: "Wenmudong", href: "/", visible: true },
+    { label: "Blogs", label_zh: "博客", href: "/blogs", visible: true },
+    { label: "Projects", label_zh: "项目", href: "/projects", visible: true },
+    { label: "Hobbies", label_zh: "爱好", href: "/hobbies", visible: true },
+    { label: "Tools", label_zh: "工具", href: "/tools", visible: true },
   ],
   right_links: [
     { label: "Github", href: "https://github.com/wenmudong", visible: true },
@@ -26,6 +27,7 @@ export default function Navbar() {
   const { user } = useAuth();
   const { openAuthModal } = useAuthModal();
   const { configs } = useSystemConfig();
+  const { language } = useLanguage();
   const [indicatorStyle, setIndicatorStyle] = useState({ width: 0, transform: "" });
   const itemRefs = useRef<(HTMLAnchorElement | null)[]>([]);
 
@@ -84,7 +86,7 @@ export default function Navbar() {
           className="absolute left-0 -z-10 h-7 rounded bg-neutral-200 backdrop-blur transition-[width,transform] duration-150"
           style={{ width: indicatorStyle.width, transform: indicatorStyle.transform }}
         />
-        {navItems.map((item: { label: string; href: string; visible?: boolean }, index: number) => (
+        {navItems.map((item: { label: string; label_zh?: string; href: string; visible?: boolean }, index: number) => (
           <Link
             key={item.href}
             href={item.href}
@@ -100,7 +102,7 @@ export default function Navbar() {
               index === activeIndex ? "text-neutral-900" : "text-neutral-400 hover:text-neutral-900"
             }`}
           >
-            {item.label}
+            {language === "zh" && item.label_zh ? item.label_zh : item.label}
           </Link>
         ))}
       </div>

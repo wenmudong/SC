@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
 import { useToast } from "@/components/Toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { compressApi } from "@/services/api";
 
 // 允许的图片格式
@@ -59,6 +60,7 @@ export default function CompressPage() {
   const { isReady } = useAuthGuard();
   const { token } = useAuth();
   const { showToast } = useToast();
+  const { t } = useLanguage();
 
   const [files, setFiles] = useState<FileItem[]>([]);
   const [quality, setQuality] = useState(80);
@@ -279,15 +281,15 @@ export default function CompressPage() {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
-      showToast("压缩完成，文件已下载", "success");
+      showToast(t("tools.compressComplete"), "success");
     } catch (err) {
-      const message = err instanceof Error ? err.message : "压缩失败";
+      const message = err instanceof Error ? err.message : t("tools.compressFailed");
       showToast(message, "error");
       setValidationError(message);
     } finally {
       setIsCompressing(false);
     }
-  }, [token, files, quality, outputFormat, compressMode, targetSize, targetUnit, showToast]);
+  }, [token, files, quality, outputFormat, compressMode, targetSize, targetUnit, showToast, t]);
 
   // 监听认证过期事件
   useEffect(() => {
@@ -313,13 +315,13 @@ export default function CompressPage() {
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
               <path fillRule="evenodd" d="M17 10a.75.75 0 01-.75.75H5.612l4.158 3.96a.75.75 0 11-1.04 1.08l-5.5-5.25a.75.75 0 010-1.08l5.5-5.25a.75.75 0 111.04 1.08L5.612 9.25H16.25A.75.75 0 0117 10z" clipRule="evenodd" />
             </svg>
-            Back to Tools
+            {t("tools.backToTools")}
           </Link>
           <h1 className="font-sans text-6xl font-extralight text-neutral-900 md:text-8xl">
             compress.
           </h1>
           <p className="text-lm text-neutral-400">
-            Batch compress and convert images.
+            {t("tools.batchCompress")}
           </p>
         </div>
       </div>
@@ -341,13 +343,13 @@ export default function CompressPage() {
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
           </svg>
           <p className="text-sm text-neutral-500">
-            拖拽图片文件或文件夹到此处，或使用下方按钮选择
+            {t("tools.dragDrop")}
           </p>
           <p className="text-xs text-neutral-400">
-            支持 JPG / PNG / WebP，最多 50 个文件，单文件 20MB
+            {t("tools.supportedFormats")}
           </p>
           <p className="text-xs text-neutral-400">
-            PNG 文件将自动转为 JPG 以实现有损压缩
+            {t("tools.pngConvert")}
           </p>
           <div className="flex gap-3">
             <button
@@ -355,14 +357,14 @@ export default function CompressPage() {
               onClick={() => fileInputRef.current?.click()}
               className="rounded bg-neutral-100 px-4 py-2 text-sm text-neutral-700 transition-colors hover:bg-neutral-200"
             >
-              选择文件
+              {t("tools.selectFiles")}
             </button>
             <button
               type="button"
               onClick={() => folderInputRef.current?.click()}
               className="rounded bg-neutral-100 px-4 py-2 text-sm text-neutral-700 transition-colors hover:bg-neutral-200"
             >
-              选择文件夹
+              {t("tools.selectFolder")}
             </button>
           </div>
           <input
@@ -397,13 +399,13 @@ export default function CompressPage() {
           <div className="mt-6">
             <div className="mb-3 flex items-center justify-between">
               <span className="text-sm text-neutral-500">
-                {files.length} 个文件 · {formatFileSize(totalSize)}
+                {files.length} {t("tools.files")} · {formatFileSize(totalSize)}
               </span>
               <button
                 onClick={clearAll}
                 className="text-sm text-neutral-400 transition-colors hover:text-red-500"
               >
-                清空
+                {t("tools.clearAll")}
               </button>
             </div>
 
@@ -449,7 +451,7 @@ export default function CompressPage() {
           {/* 压缩模式 */}
           <div>
             <label className="mb-2 block text-sm text-neutral-600">
-              压缩模式
+              {t("tools.compressMode")}
             </label>
             <div className="flex gap-4">
               <label className="flex cursor-pointer items-center gap-2">
@@ -461,7 +463,7 @@ export default function CompressPage() {
                   onChange={() => setCompressMode("quality")}
                   className="accent-neutral-900"
                 />
-                <span className="text-sm text-neutral-700">按质量</span>
+                <span className="text-sm text-neutral-700">{t("tools.byQuality")}</span>
               </label>
               <label className="flex cursor-pointer items-center gap-2">
                 <input
@@ -472,7 +474,7 @@ export default function CompressPage() {
                   onChange={() => setCompressMode("target_size")}
                   className="accent-neutral-900"
                 />
-                <span className="text-sm text-neutral-700">按目标大小</span>
+                <span className="text-sm text-neutral-700">{t("tools.byTargetSize")}</span>
               </label>
             </div>
           </div>
@@ -481,7 +483,7 @@ export default function CompressPage() {
           {compressMode === "quality" && (
             <div>
               <label className="mb-2 block text-sm text-neutral-600">
-                压缩质量：<span className="font-mono text-neutral-900">{quality}</span>
+                {t("tools.quality")}：<span className="font-mono text-neutral-900">{quality}</span>
               </label>
               <div className="flex items-center gap-3">
                 <input
@@ -514,7 +516,7 @@ export default function CompressPage() {
           {compressMode === "target_size" && (
             <div>
               <label className="mb-2 block text-sm text-neutral-600">
-                目标大小
+                {t("tools.targetSize")}
               </label>
               <div className="flex items-center gap-2">
                 <input
@@ -545,7 +547,7 @@ export default function CompressPage() {
           {/* 格式选择 */}
           <div>
             <label className="mb-2 block text-sm text-neutral-600">
-              输出格式
+              {t("tools.outputFormat")}
             </label>
             <div className="flex gap-4">
               <label className="flex cursor-pointer items-center gap-2">
@@ -557,7 +559,7 @@ export default function CompressPage() {
                   onChange={() => setOutputFormat("original")}
                   className="accent-neutral-900"
                 />
-                <span className="text-sm text-neutral-700">保持原格式（PNG 转 JPG）</span>
+                <span className="text-sm text-neutral-700">{t("tools.keepOriginal")}</span>
               </label>
               <label className="flex cursor-pointer items-center gap-2">
                 <input
@@ -568,7 +570,7 @@ export default function CompressPage() {
                   onChange={() => setOutputFormat("webp")}
                   className="accent-neutral-900"
                 />
-                <span className="text-sm text-neutral-700">转为 WebP</span>
+                <span className="text-sm text-neutral-700">{t("tools.convertWebP")}</span>
               </label>
             </div>
           </div>
@@ -587,10 +589,10 @@ export default function CompressPage() {
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                 </svg>
-                压缩中...
+                {t("tools.compressing")}
               </span>
             ) : (
-              `压缩 ${files.length > 0 ? `${files.length} 个文件` : ""}`
+              `${t("tools.compress")} ${files.length > 0 ? `${files.length} ${t("tools.files")}` : ""}`
             )}
           </button>
         </div>

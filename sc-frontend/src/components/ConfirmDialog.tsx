@@ -1,6 +1,7 @@
 "use client";
 
 import { ReactNode } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -19,10 +20,14 @@ export default function ConfirmDialog({
   message,
   onConfirm,
   onCancel,
-  confirmText = "Confirm",
-  cancelText = "Cancel",
+  confirmText,
+  cancelText,
   confirmClassName = "",
 }: ConfirmDialogProps) {
+  const { t } = useLanguage();
+  const effectiveConfirmText = confirmText ?? t("confirm.confirm");
+  const effectiveCancelText = cancelText ?? t("confirm.cancel");
+
   if (!open) return null;
 
   return (
@@ -46,13 +51,13 @@ export default function ConfirmDialog({
             onClick={onCancel}
             className="rounded-lg border border-neutral-300 px-4 py-2 text-neutral-600 transition-colors hover:bg-neutral-50"
           >
-            {cancelText}
+            {effectiveCancelText}
           </button>
           <button
             onClick={onConfirm}
             className={`rounded-lg bg-neutral-900 px-4 py-2 text-white transition-colors hover:bg-neutral-800 ${confirmClassName}`}
           >
-            {confirmText}
+            {effectiveConfirmText}
           </button>
         </div>
       </div>

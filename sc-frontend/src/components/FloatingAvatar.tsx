@@ -3,11 +3,13 @@
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAuthModal } from "@/hooks/useAuthModal";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useState, useRef, useEffect } from "react";
 
 export default function FloatingAvatar() {
   const { user, logout } = useAuth();
   const { openAuthModal } = useAuthModal();
+  const { language, toggleLanguage, t } = useLanguage();
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -74,25 +76,33 @@ export default function FloatingAvatar() {
             <p className="font-medium text-neutral-900">{user.username}</p>
             <p className="text-xs text-neutral-500">{user.role}</p>
           </div>
+          {/* 语言切换按钮 */}
+          <button
+            onClick={toggleLanguage}
+            className="w-full px-4 py-2 text-left text-sm text-neutral-600 hover:bg-neutral-50"
+          >
+            {language === "en" ? "EN/中" : "中/EN"}
+          </button>
+          <div className="border-t border-neutral-100" />
           {user.role === "admin" && (
             <Link
               href="/admin/config"
               className="block px-4 py-2 text-sm text-neutral-600 hover:bg-neutral-50"
             >
-              Settings
+              {t("floatingAvatar.settings")}
             </Link>
           )}
           <Link
             href="/profile"
             className="block px-4 py-2 text-sm text-neutral-600 hover:bg-neutral-50"
           >
-            Profile
+            {t("floatingAvatar.profile")}
           </Link>
           <button
             onClick={logout}
             className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-neutral-50"
           >
-            Logout
+            {t("floatingAvatar.logout")}
           </button>
         </div>
       )}

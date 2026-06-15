@@ -4,6 +4,7 @@ import { useRef, useState, useEffect } from "react";
 import TextCard from "@/components/Cards/TextCard";
 import EmptyState from "@/components/EmptyState";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Tool {
   id: string;
@@ -26,6 +27,7 @@ const TOOLS: Tool[] = [
 
 export default function ToolsPage() {
   const { isReady } = useAuthGuard();
+  const { t } = useLanguage();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
@@ -78,14 +80,14 @@ export default function ToolsPage() {
             Tools.
           </h1>
           <p className="text-lm text-neutral-400">
-            {TOOLS.length} {"Tools"} · Wenmudong&apos;s collection.
+            {TOOLS.length} {t("tools.tools")} · {t("tools.description")}
           </p>
         </div>
       </div>
 
       {/* 工具列表 - 水平滚动 + 拖动 */}
       {TOOLS.length === 0 ? (
-        <EmptyState message="No tools yet." />
+        <EmptyState message={t("tools.noTools")} />
       ) : (
         <div className="relative">
           {/* 左侧渐变遮罩 */}

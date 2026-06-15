@@ -1,5 +1,8 @@
+"use client";
+
 import ProjectCard from "@/components/Cards/ProjectCard";
 import AuthGuard from "@/components/AuthGuard";
+import { useLanguage } from "@/contexts/LanguageContext";
 import type { Project } from "@/types";
 
 // TODO: 后端对接后替换为 API 调用
@@ -35,6 +38,8 @@ const mockProjects: Project[] = [
 ];
 
 export default function Projects() {
+  const { t } = useLanguage();
+
   return (
     <AuthGuard>
     <>
@@ -49,7 +54,7 @@ export default function Projects() {
           </div>
           {/* 第二行: 描述 */}
           <p className="text-lm text-neutral-400">
-            {mockProjects.length} {"projects"} · What I&apos;m working on. Feel free to reach out if you&apos;re interested in collaborating!
+            {mockProjects.length} {t("projects.projects")} · {t("projects.description")}
           </p>
         </div>
       </div>

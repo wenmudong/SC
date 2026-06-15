@@ -1,5 +1,8 @@
+"use client";
+
 import HobbyCard from "@/components/Cards/HobbyCard";
 import AuthGuard from "@/components/AuthGuard";
+import { useLanguage } from "@/contexts/LanguageContext";
 import type { Hobby } from "@/types";
 
 // TODO: 后端对接后替换为 API 调用
@@ -137,6 +140,7 @@ const mockHobbies: Hobby[] = [
 ];
 
 export default function Hobbies() {
+  const { t } = useLanguage();
   return (
     <AuthGuard>
     <>
@@ -151,7 +155,7 @@ export default function Hobbies() {
           </div>
           {/* 第二行: 描述 */}
           <p className="text-lm text-neutral-400">
-            {mockHobbies.length} {"items"} · Things I enjoy in my free time.
+            {`${mockHobbies.length} ${t("hobbies.items")} · ${t("hobbies.description")}`}
           </p>
         </div>
       </div>
