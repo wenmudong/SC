@@ -31,6 +31,7 @@ export default function Navbar() {
   const [indicatorStyle, setIndicatorStyle] = useState({ width: 0, transform: "" });
   const itemRefs = useRef<(HTMLAnchorElement | null)[]>([]);
   const [mounted, setMounted] = useState(false);
+  const [hoverIndex, setHoverIndex] = useState<number | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -58,16 +59,21 @@ export default function Navbar() {
 
   useEffect(() => {
     // 等待字体加载完成后再计算指示器位置
+    // 语言切换时也需要重新计算，因为文字宽度会变化
     document.fonts.ready.then(() => {
-      const activeItem = itemRefs.current[activeIndex];
-      if (activeItem) {
-        setIndicatorStyle({
-          width: activeItem.offsetWidth,
-          transform: `translate(${activeItem.offsetLeft}px)`,
-        });
-      }
+      // 等待 DOM 更新完成后再计算
+      requestAnimationFrame(() => {
+        const targetIndex = hoverIndex !== null ? hoverIndex : activeIndex;
+        const targetItem = itemRefs.current[targetIndex];
+        if (targetItem) {
+          setIndicatorStyle({
+            width: targetItem.offsetWidth,
+            transform: `translate(${targetItem.offsetLeft}px)`,
+          });
+        }
+      });
     });
-  }, [activeIndex]);
+  }, [activeIndex, hoverIndex, language]);
 
   // 根据导航栏样式返回背景类
   const getNavbarBgClass = () => {
@@ -103,6 +109,8 @@ export default function Navbar() {
                 openAuthModal();
               }
             }}
+            onMouseEnter={() => setHoverIndex(index)}
+            onMouseLeave={() => setHoverIndex(null)}
             className={`rounded py-1 px-2 text-sm tracking-tight transition-colors focus-visible:ring-4 focus-visible:ring-blue-200 ${
               index === activeIndex ? "text-neutral-900" : "text-neutral-400 hover:text-neutral-900"
             }`}
