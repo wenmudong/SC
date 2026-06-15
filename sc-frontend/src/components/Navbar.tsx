@@ -30,6 +30,11 @@ export default function Navbar() {
   const { language } = useLanguage();
   const [indicatorStyle, setIndicatorStyle] = useState({ width: 0, transform: "" });
   const itemRefs = useRef<(HTMLAnchorElement | null)[]>([]);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // 从配置读取导航栏配置
   const navbarConfig = (() => {
@@ -102,7 +107,7 @@ export default function Navbar() {
               index === activeIndex ? "text-neutral-900" : "text-neutral-400 hover:text-neutral-900"
             }`}
           >
-            {language === "zh" && item.label_zh ? item.label_zh : item.label}
+            {mounted && language === "zh" && item.label_zh ? item.label_zh : item.label}
           </Link>
         ))}
       </div>
