@@ -77,7 +77,8 @@ SuperCenter/
 │   │   │   ├── users.py      # 用户路由
 │   │   │   ├── blogs.py      # 博客路由
 │   │   │   ├── upload.py     # 上传路由
-│   │   │   └── admin.py      # 管理路由
+│   │   │   ├── admin.py      # 管理路由
+│   │   │   └── config.py     # 公开配置路由（无需认证）
 │   │   ├── schemas/          # Pydantic Schemas
 │   │   └── middleware/       # 中间件
 │   │       └── auth.py       # JWT 认证中间件
@@ -185,6 +186,14 @@ SuperCenter/
 | GET | /api/blogs/{id} | 获取博客详情 | 否 |
 | PUT | /api/blogs/{id} | 更新博客 | 是 (blogger) |
 | DELETE | /api/blogs/{id} | 软删除博客 | 是 (blogger) |
+
+### 公开配置 API
+
+| 方法 | 路由 | 说明 | 认证 |
+|------|------|------|------|
+| GET | /api/config | 获取公开的系统配置（全局生效的配置） | 否 |
+
+> 说明：公开配置用于所有用户都需要的配置项（如全局字体），无需认证即可访问。管理员通过 `/api/admin/config` 设置配置后，普通用户通过此接口获取。
 
 ## 启动方式
 
