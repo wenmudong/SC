@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { adminApi } from "@/services/api";
+import { adminApi, API_BASE } from "@/services/api";
 import { useAuth } from "./AuthContext";
 import type { SystemConfig } from "@/types";
 
@@ -60,9 +60,9 @@ export function SystemConfigProvider({ children }: { children: ReactNode }) {
   const [configs, setConfigs] = useState<Map<string, string>>(new Map());
   const [isLoading, setIsLoading] = useState(true);
 
-  // 加载配置（所有用户从 localStorage 加载，admin 从服务器同步）
+  // 加载配置
   const loadConfigs = async () => {
-    // 所有用户先从 localStorage 加载并应用
+    // 1. 所有用户先从 localStorage 加载并应用（立即生效）
     const stored = loadConfigsFromStorage();
     if (stored.size > 0) {
       setConfigs(stored);
@@ -70,19 +70,40 @@ export function SystemConfigProvider({ children }: { children: ReactNode }) {
     }
     setIsLoading(false);
 
-    // admin 从服务器同步最新配置
+    // 2. 所有用户都从公开API同步最新配置（只读）
+    try {
+      const response = await fetch(`${API_BASE}/config`);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      const data = await response.json();
+      const configMap = new Map<string, string>();
+      Object.entries(data.configs).forEach(([key, value]) => {
+        configMap.set(key, value as string);
+      });
+
+      // 合并配置（服务器配置覆盖本地配置）
+      const mergedConfigs = new Map([...stored, ...configMap]);
+      setConfigs(mergedConfigs);
+      saveConfigsToStorage(mergedConfigs);
+      applyAllConfigs(mergedConfigs);
+    } catch (error) {
+      console.error("加载公开配置失败:", error);
+    }
+
+    // 3. admin用户继续从服务器同步所有配置（包括非公开配置）
     if (token && user?.role === "admin") {
       try {
         const response = await adminApi.getAllConfigs(token);
-        const configMap = new Map<string, string>();
+        const adminConfigMap = new Map<string, string>();
         response.configs.forEach((config: SystemConfig) => {
-          configMap.set(config.key, config.value);
+          adminConfigMap.set(config.key, config.value);
         });
-        setConfigs(configMap);
-        saveConfigsToStorage(configMap);
-        applyAllConfigs(configMap);
+        setConfigs(adminConfigMap);
+        saveConfigsToStorage(adminConfigMap);
+        applyAllConfigs(adminConfigMap);
       } catch (error) {
-        console.error("加载系统配置失败:", error);
+        console.error("加载所有配置失败:", error);
       }
     }
   };
