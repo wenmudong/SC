@@ -45,7 +45,15 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
 
   if (!res.ok) {
     const error = await res.json().catch(() => ({ detail: "Request failed" }));
-    throw new Error(error.detail || `API Error: ${res.status}`);
+    // 处理 Pydantic 验证错误（detail 可能是数组）
+    let message: string;
+    if (Array.isArray(error.detail)) {
+      // 提取所有错误消息，用逗号分隔
+      message = error.detail.map((err: { msg?: string }) => err.msg || "验证错误").join(", ");
+    } else {
+      message = error.detail || `API Error: ${res.status}`;
+    }
+    throw new Error(message);
   }
 
   // 204 No Content
