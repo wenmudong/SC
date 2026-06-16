@@ -12,6 +12,8 @@ export default function FloatingAvatar() {
   const { language, toggleLanguage, t } = useLanguage();
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const longPressTimer = useRef<NodeJS.Timeout | null>(null);
+  const longPressDelay = 800;
 
   // 点击其他区域关闭菜单
   useEffect(() => {
@@ -28,6 +30,27 @@ export default function FloatingAvatar() {
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
     setShowMenu(!showMenu);
+  };
+
+  // 手机端长按触发菜单
+  const handleTouchStart = () => {
+    longPressTimer.current = setTimeout(() => {
+      setShowMenu(true);
+    }, longPressDelay);
+  };
+
+  const handleTouchEnd = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  };
+
+  const handleTouchMove = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
   };
 
   const avatarClass = "flex h-12 w-12 items-center justify-center rounded-full bg-neutral-200 shadow-lg transition-transform hover:scale-105";
@@ -52,6 +75,9 @@ export default function FloatingAvatar() {
       <Link
         href="/profile"
         onContextMenu={handleContextMenu}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        onTouchMove={handleTouchMove}
         className="block"
       >
         <div className={avatarClass}>
