@@ -12,6 +12,9 @@ class Settings(BaseSettings):
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 60 * 24 * 7  # 7 天过期
 
+    # CORS 配置
+    cors_origins: str = "http://localhost:3000"  # 逗号分隔的来源列表
+
     # 上传配置
     upload_dir: str = "public/uploads"
     maxAvatarSize: int = 2 * 1024 * 1024  # 2MB
@@ -20,6 +23,11 @@ class Settings(BaseSettings):
     maxCompressSize: int = 20 * 1024 * 1024  # 单文件 20MB
     maxCompressTotalSize: int = 500 * 1024 * 1024  # 总大小 500MB
     maxCompressFiles: int = 50  # 最多 50 个文件
+
+    @property
+    def cors_origins_list(self) -> list[str]:
+        """将逗号分隔的来源字符串转换为列表"""
+        return [origin.strip() for origin in self.cors_origins.split(",")]
 
     class Config:
         env_file = ".env"

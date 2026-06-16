@@ -1,12 +1,16 @@
 """认证路由"""
-from fastapi import APIRouter, Depends, HTTPException, status
+import logging
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from passlib.hash import argon2
 from sqlmodel import Session, select
+
+logger = logging.getLogger("supercenter.auth")
 
 from app.database import get_db
 from app.models import User
 from app.schemas import UserCreate, UserLogin, UserResponse, Token
 from app.middleware.auth import create_access_token, get_current_user
+from app.middleware.rate_limit import rate_limit_login
 
 router = APIRouter(prefix="/api/auth", tags=["认证"])
 
@@ -51,17 +55,35 @@ def register(data: UserCreate, db: Session = Depends(get_db)):
 
 
 @router.post("/login", response_model=Token)
-def login(data: UserLogin, db: Session = Depends(get_db)):
+def login(data: UserLogin, request: Request, db: Session = Depends(get_db)):
     """用户登录"""
+    # 速率限制
+    rate_limit_login(request)
+
+    # 获取客户端信息
+    client_ip = request.client.host if request.client else "unknown"
+    user_agent = request.headers.get("User-Agent", "unknown")
+
     user = db.exec(
         select(User).where(User.username == data.username)
     ).first()
 
     if not user or not argon2.verify(data.password, user.password_hash):
+        # 记录登录失败
+        logger.warning(
+            f"登录失败: username={data.username}, "
+            f"ip={client_ip}, user_agent={user_agent}"
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="用户名或密码错误",
         )
+
+    # 记录登录成功
+    logger.info(
+        f"登录成功: user_id={user.id}, username={user.username}, "
+        f"ip={client_ip}, user_agent={user_agent}"
+    )
 
     access_token = create_access_token(data={"sub": str(user.id)})
     return Token(access_token=access_token)

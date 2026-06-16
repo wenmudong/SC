@@ -4,7 +4,7 @@ import type { User, Token, Blog, BlogListItem, SystemConfig } from "@/types";
 // 根据当前访问地址动态推断后端地址
 // Docker部署（端口80）：通过Nginx代理访问 /api
 // 开发环境（其他端口）：直接访问后端 :8000/api
-const API_BASE = typeof window !== 'undefined'
+export const API_BASE = typeof window !== 'undefined'
   ? (window.location.port === "80" || window.location.port === "")
     ? `${window.location.protocol}//${window.location.hostname}/api`
     : `${window.location.protocol}//${window.location.hostname}:8000/api`
@@ -45,7 +45,15 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
 
   if (!res.ok) {
     const error = await res.json().catch(() => ({ detail: "Request failed" }));
-    throw new Error(error.detail || `API Error: ${res.status}`);
+    // 处理 Pydantic 验证错误（detail 可能是数组）
+    let message: string;
+    if (Array.isArray(error.detail)) {
+      // 提取所有错误消息，用逗号分隔
+      message = error.detail.map((err: { msg?: string }) => err.msg || "验证错误").join(", ");
+    } else {
+      message = error.detail || `API Error: ${res.status}`;
+    }
+    throw new Error(message);
   }
 
   // 204 No Content

@@ -125,18 +125,17 @@ cd SuperCenter
 ### 2. 配置环境变量
 
 ```bash
-# 复制模板
-cp .env.example .env
+# 复制 Docker 环境变量模板
+cp .env.docker .env
 
 # 生成一个安全的密钥并写入 .env
 sed -i "s/SECRET_KEY=.*/SECRET_KEY=$(openssl rand -hex 32)/" .env
 
-# 设置 CORS（你的服务器 IP）
-sed -i "s/ALLOWED_ORIGINS=.*/ALLOWED_ORIGINS=http:\/\/你的服务器IP/" .env
-
 # 检查一下
 cat .env
 ```
+
+> 说明：CORS 配置已硬编码为允许所有来源（`allow_origins=["*"]`），无需额外配置。
 
 ### 3. 构建并启动
 

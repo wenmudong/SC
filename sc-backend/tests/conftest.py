@@ -11,15 +11,15 @@ TEST_DB_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "test_sc.db
 TEST_DATABASE_URL = f"sqlite:///{os.path.abspath(TEST_DB_PATH)}"
 
 # 创建测试引擎（独立于开发数据库）
-test_engine = create_engine(TEST_DATABASE_URL, echo=False, connect_args={"check_same_thread": False})
+_engine = create_engine(TEST_DATABASE_URL, echo=False, connect_args={"check_same_thread": False})
 
 
 @pytest_asyncio.fixture(autouse=True)
 def setup_test_db():
     """每个测试前重建表，测试后清理"""
-    SQLModel.metadata.create_all(test_engine)
+    SQLModel.metadata.create_all(_engine)
     yield
-    SQLModel.metadata.drop_all(test_engine)
+    SQLModel.metadata.drop_all(_engine)
 
 
 @pytest_asyncio.fixture
@@ -27,7 +27,7 @@ async def client():
     """异步测试客户端（覆盖数据库依赖）"""
     # 覆盖 get_db 使用测试数据库
     def override_get_db():
-        db = Session(test_engine)
+        db = Session(_engine)
         try:
             yield db
         finally:
@@ -40,6 +40,12 @@ async def client():
         yield ac
 
     app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def test_engine():
+    """暴露测试引擎供测试使用"""
+    return _engine
 
 
 # 配置 pytest-asyncio
