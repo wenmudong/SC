@@ -21,6 +21,9 @@ const CONFIG_STORAGE_KEY = "system_configs";
 function applyConfig(key: string, value: string) {
   switch (key) {
     case "global_font":
+      // 同时修改 html 和 body 的 CSS 变量，确保 Tailwind 的 font-sans 类也能生效
+      document.documentElement.style.setProperty("font-family", value, "important");
+      document.documentElement.style.setProperty("--font-sans", value, "important");
       document.body.style.setProperty("font-family", value, "important");
       document.body.style.setProperty("--font-sans", value, "important");
       document.body.setAttribute("data-font", value);
