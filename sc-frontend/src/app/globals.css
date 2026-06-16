@@ -21,15 +21,17 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  /* 默认字体：像素字体。可通过 JavaScript 运行时覆盖此变量切换字体 */
+  --default-font-sans: "FusionPixel", var(--font-geist-sans);
+  --default-font-mono: "FusionPixel", var(--font-geist-mono);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  /* 像素字体：取消注释下方注释，注释掉 geist-sans 即可切换回原字体 */
-  /*"FusionPixel",*/
-  --font-sans: "FusionPixel", var(--font-geist-sans);
-  --font-mono: "FusionPixel", var(--font-geist-mono);
+  /* 使用 CSS 变量，允许 JavaScript 运行时覆盖 */
+  --font-sans: var(--default-font-sans);
+  --font-mono: var(--default-font-mono);
 
   /* 呼吸动画 */
   --animate-breathe: breathe 3s ease-in-out infinite;
@@ -137,13 +139,4 @@ body {
   /* 像素字体特有的平滑处理 */
   -webkit-font-smoothing: none;
   -moz-osx-font-smoothing: unset;
-}
-
-/* 系统配置字体 - 使用 html body 选择器 + !important 确保高优先级 */
-html body[data-font="FusionPixel"] {
-  font-family: "FusionPixel", var(--font-geist-sans) !important;
-}
-
-html body[data-font="var(--font-geist-sans)"] {
-  font-family: var(--font-geist-sans) !important;
 }

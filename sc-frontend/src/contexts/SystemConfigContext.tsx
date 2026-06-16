@@ -20,14 +20,29 @@ const CONFIG_STORAGE_KEY = "system_configs";
 // 应用配置到页面
 function applyConfig(key: string, value: string) {
   switch (key) {
-    case "global_font":
-      // 同时修改 html 和 body 的 CSS 变量，确保 Tailwind 的 font-sans 类也能生效
-      document.documentElement.style.setProperty("font-family", value, "important");
-      document.documentElement.style.setProperty("--font-sans", value, "important");
-      document.body.style.setProperty("font-family", value, "important");
-      document.body.style.setProperty("--font-sans", value, "important");
-      document.body.setAttribute("data-font", value);
+    case "global_font": {
+      // 将配置值转换为 CSS 字体值
+      // 配置值: "FusionPixel" 或 "var(--font-geist-sans)"
+      let fontSansValue: string;
+      let fontMonoValue: string;
+      if (value === "FusionPixel") {
+        // 像素字体：包含备用字体
+        fontSansValue = '"FusionPixel", var(--font-geist-sans)';
+        fontMonoValue = '"FusionPixel", var(--font-geist-mono)';
+      } else {
+        // 系统字体：直接使用
+        fontSansValue = value;
+        fontMonoValue = value;
+      }
+
+      // 修改 --default-font-sans 变量，让所有使用 font-sans 的地方自动更新
+      document.documentElement.style.setProperty("--default-font-sans", fontSansValue, "important");
+      // 修改 --default-font-mono 变量，让所有使用 font-mono 的地方自动更新
+      document.documentElement.style.setProperty("--default-font-mono", fontMonoValue, "important");
+      // 同时设置 body 的 font-family 确保生效
+      document.body.style.setProperty("font-family", `var(--font-sans)`, "important");
       break;
+    }
   }
 }
 
