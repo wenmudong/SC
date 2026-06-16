@@ -38,6 +38,25 @@ async def log_requests(request: Request, call_next):
     logger.info(f"{request.method} {request.url.path} -> {response.status_code} ({duration}ms)")
     return response
 
+# 安全响应头中间件
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    response = await call_next(request)
+
+    # 防止 MIME 类型嗅探
+    response.headers["X-Content-Type-Options"] = "nosniff"
+
+    # 防止点击劫持
+    response.headers["X-Frame-Options"] = "DENY"
+
+    # 启用浏览器 XSS 防护
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+
+    # 控制 Referrer 信息
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+
+    return response
+
 # 全局异常处理
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
@@ -50,10 +69,10 @@ async def global_exception_handler(request: Request, exc: Exception):
 # CORS 配置
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=settings.cors_origins_list,
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH"],
+    allow_headers=["Authorization", "Content-Type"],
 )
 
 # 响应压缩（阈值 1000 字节）

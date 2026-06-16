@@ -21,7 +21,7 @@ ENV/
 # Environment
 .env
 .env.*
-!.env.docker
+!.env.docker.example
 
 # Databases
 *.db
@@ -54,7 +54,7 @@ Question/
 
 # Personal files
 docs/private/
-docs/plans/
+# docs/plans/
 docs/superpowers/
 docs/design/
 CLAUDE.md
