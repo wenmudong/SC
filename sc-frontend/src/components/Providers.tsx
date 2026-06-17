@@ -8,10 +8,15 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AuthModalProvider } from "@/hooks/useAuthModal";
 import LoginModal from "@/components/LoginModal";
 
-export default function Providers({ children }: { children: ReactNode }) {
+interface ProvidersProps {
+  children: ReactNode;
+  initialLanguage?: "en" | "zh";
+}
+
+export default function Providers({ children, initialLanguage }: ProvidersProps) {
   return (
     <AuthProvider>
-      <LanguageProvider>
+      <LanguageProvider initialLanguage={initialLanguage}>
         <SystemConfigProvider>
           <ToastProvider>
             <AuthModalProvider>
