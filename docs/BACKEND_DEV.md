@@ -39,6 +39,9 @@ sc-backend/
 │   │   └── upload.py
 │   └── middleware/
 │       └── auth.py          # JWT 认证中间件
+├── alembic/                 # 数据库迁移（Alembic）
+│   ├── env.py               # 迁移环境配置
+│   └── versions/            # 迁移版本文件
 ├── tests/                   # 测试目录（TDD）
 ├── data/                    # SQLite 数据库文件目录
 ├── public/                  # 静态文件
@@ -440,16 +443,33 @@ def require_blogger(current_user: User = Depends(get_current_user)) -> User:
 - 统一存放在 `sc-backend/data/` 目录
 - 所有 `.db` 文件已加入 `.gitignore`
 
-### 10.2 迁移脚本
+### 10.2 迁移脚本（Alembic）
 
-> 暂无数据库迁移脚本需求，如有需要按以下方式添加：
-> ```bash
-> python -m scripts.migrate_add_xxx
-> ```
+使用 Alembic 管理数据库迁移，修改模型后必须生成迁移脚本：
+
+```bash
+# 自动生成迁移脚本
+alembic revision --autogenerate -m "描述"
+
+# 执行迁移
+alembic upgrade head
+
+# 回滚
+alembic downgrade -1
+
+# 查看当前版本
+alembic current
+
+# 查看迁移历史
+alembic history
+```
+
+> ⚠️ 生成迁移脚本后务必检查内容，自动检测可能不完美（如重命名列、数据迁移需要手动修正）。
 
 ### 10.3 初始化
 
-- 后端启动时通过 `lifespan` 自动创建数据库和表
+- 数据库表结构由 Alembic 迁移管理（`alembic upgrade head`）
+- Docker 部署时 `entrypoint.sh` 自动执行迁移
 - 使用 `python -m scripts.seed_db` 创建预置账号
 
 ### 10.4 索引策略
@@ -493,6 +513,14 @@ uv run pytest
 
 # 创建预置账号（如有 seed_db 脚本）
 python -m scripts.seed_db
+
+# 数据库迁移（Alembic）
+alembic current                              # 查看当前版本
+alembic history                              # 查看迁移历史
+alembic revision --autogenerate -m "描述"     # 自动生成迁移脚本
+alembic upgrade head                         # 执行所有待执行的迁移
+alembic downgrade -1                         # 回退一个版本
+alembic stamp head                           # 标记数据库为最新版本（不执行迁移）
 ```
 
 ---

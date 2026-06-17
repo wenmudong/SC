@@ -8,7 +8,6 @@ from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 
 from app.config import settings
-from app.database import create_db_and_tables
 from app.routers.api import api as api_router
 from app.routers.auth import router as auth_router
 from app.routers.users import router as users_router
@@ -23,7 +22,8 @@ logger = logging.getLogger("supercenter")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    create_db_and_tables()
+    # 数据库表结构由 Alembic 迁移管理
+    # 启动时只检查数据库连接是否正常
     yield
 
 

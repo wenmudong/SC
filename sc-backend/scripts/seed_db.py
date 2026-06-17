@@ -5,12 +5,12 @@ from getpass import getpass
 from sqlmodel import Session, select
 from passlib.hash import argon2
 
-from app.database import engine, create_db_and_tables
+from app.database import engine
 from app.models import User
 
 
 def seed():
-    create_db_and_tables()
+    # 数据库表结构由 Alembic 迁移管理，不再需要 create_db_and_tables()
 
     with Session(engine) as db:
         # 检查是否已有用户

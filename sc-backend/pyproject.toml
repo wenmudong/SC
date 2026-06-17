@@ -17,6 +17,7 @@ dependencies = [
     "aiofiles>=24.1.0",
     "email-validator>=2.3.0",
     "pillow>=10.0.0",
+    "alembic>=1.18.4",
 ]
 
 [tool.uv]
