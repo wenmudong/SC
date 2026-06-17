@@ -231,5 +231,4 @@ python -m scripts.seed_db
 
 ## 相关文档
 
-- 项目总览：`docs/SPEC.md`
 - API 文档：http://localhost:8000/docs（启动后可访问）
