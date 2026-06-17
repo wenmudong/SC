@@ -82,6 +82,9 @@ SuperCenter/
 │   │   ├── schemas/          # Pydantic Schemas
 │   │   └── middleware/       # 中间件
 │   │       └── auth.py       # JWT 认证中间件
+│   ├── alembic/             # 数据库迁移（Alembic）
+│   │   ├── env.py           # 迁移环境配置
+│   │   └── versions/        # 迁移版本文件
 │   ├── tests/               # 测试目录（TDD）
 │   ├── data/                 # 数据库文件目录
 │   └── pyproject.toml
@@ -218,7 +221,7 @@ npm run dev
 
 - 数据库文件统一存放在 `sc-backend/data/` 目录下
 - 支持多数据库：可在 `data/` 目录添加新的 `.db` 文件
-- 后端启动时自动创建 SQLite 数据库和表
+- **数据库迁移使用 Alembic**：修改模型后必须生成迁移脚本
 - 所有 `.db` 文件已被 `.gitignore` 忽略，不会提交到版本控制
 - 软删除：博客使用软删除机制，删除时设置 `is_deleted=True`，不会真正从数据库删除
 
@@ -226,7 +229,7 @@ npm run dev
 
 - API 遵循 RESTful 规范
 - 前端通过 `/api` 前缀调用后端接口（已配置 CORS 允许 localhost:3000）
-- 后端启动时自动创建 SQLite 数据库和表
+- **数据库迁移使用 Alembic**：修改模型后必须生成迁移脚本
 - 文档随项目更新同步维护
 - 各子项目详细文档：
   - 后端详细文档：`sc-backend/CLAUDE.md`

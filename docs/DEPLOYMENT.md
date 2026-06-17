@@ -293,132 +293,84 @@ docker compose logs --tail 20
 cp ./data/supercenter.db ./data/supercenter.db.bak.$(date +%Y%m%d)
 ```
 
-## 十、数据库迁移
+## 十、数据库迁移（Alembic）
 
-当模型新增字段时，需要运行数据库迁移脚本。
+项目使用 Alembic 管理数据库迁移，修改模型后必须生成迁移脚本。
 
-### 迁移流程
+### 日常开发流程
 
-1. **创建迁移脚本**
+```bash
+# 1. 修改模型（如 app/models/user.py 添加字段）
 
-   在 `sc-backend/scripts/` 目录下创建迁移脚本，例如 `migrate_add_xxx.py`：
+# 2. 自动生成迁移脚本
+alembic revision --autogenerate -m "add user phone_number"
 
-   ```python
-   """
-   数据库迁移脚本：为 xxx 表添加 yyy 字段
-   """
-   import sqlite3
-   import os
+# 3. 检查生成的迁移脚本（重要！自动检测可能不完美）
 
-   def migrate():
-       """添加 yyy 列到 xxx 表"""
-       db_path = os.path.join(os.path.dirname(__file__), "..", "data", "supercenter.db")
+# 4. 执行迁移
+alembic upgrade head
 
-       if not os.path.exists(db_path):
-           print(f"数据库文件不存在: {db_path}")
-           return
+# 5. 如果需要回滚
+alembic downgrade -1
+```
 
-       conn = sqlite3.connect(db_path)
-       cursor = conn.cursor()
+### 云服务器部署流程
 
-       # 检查列是否已存在（幂等性）
-       cursor.execute("PRAGMA table_info(xxx)")
-       columns = [row[1] for row in cursor.fetchall()]
+#### 首次部署（过渡期）
 
-       if "yyy" in columns:
-           print("yyy 列已存在，跳过迁移")
-           conn.close()
-           return
+```bash
+cd /path/to/SuperCenter/sc-backend
+git pull origin develop
+alembic stamp head  # 标记现有数据库为当前版本
+docker-compose down
+docker-compose build backend
+docker-compose up -d
+```
 
-       # 添加 yyy 列，默认值为 'default_value'
-       print("添加 yyy 列...")
-       cursor.execute("ALTER TABLE xxx ADD COLUMN yyy VARCHAR DEFAULT 'default_value'")
+#### 后续部署（正常流程）
 
-       conn.commit()
-       conn.close()
-       print("迁移完成！")
+```bash
+cd /path/to/SuperCenter
+git pull origin develop
+docker-compose down
+docker-compose build backend
+docker-compose up -d
+# entrypoint.sh 自动执行 alembic upgrade head
+```
 
-   if __name__ == "__main__":
-       migrate()
-   ```
+### 常用命令速查
 
-2. **重新构建后端镜像**
-
-   ```bash
-   # 重新构建后端（包含新迁移脚本）
-   docker compose down backend
-   docker compose build backend
-   docker compose up -d backend
-   ```
-
-3. **在容器中运行迁移**
-
-   ```bash
-   # 运行迁移脚本
-   docker compose exec backend python -m scripts.migrate_add_yyy
-   ```
-
-4. **验证迁移结果**
-
-   ```bash
-   # 查看后端日志确认启动成功
-   docker compose logs backend --tail 20
-
-   # 检查表结构
-   docker compose exec backend python -c "
-   from app.database import engine
-   from sqlalchemy import inspect
-   inspector = inspect(engine)
-   print(inspector.get_columns('xxx'))
-   "
-   ```
+| 命令 | 说明 |
+|------|------|
+| `alembic current` | 查看当前版本 |
+| `alembic history` | 查看迁移历史 |
+| `alembic revision --autogenerate -m "描述"` | 自动生成迁移脚本 |
+| `alembic upgrade head` | 执行所有待执行的迁移 |
+| `alembic downgrade -1` | 回退上一个版本 |
+| `alembic stamp head` | 标记数据库为最新版本（不执行迁移） |
 
 ### 迁移最佳实践
 
 | 原则 | 说明 |
 |------|------|
-| **幂等性** | 迁移脚本可以多次运行，不会重复添加列 |
-| **非破坏性** | 使用 `ALTER TABLE ADD COLUMN`，不影响现有数据 |
-| **默认值** | 为新列设置合理的默认值，避免 NULL 问题 |
-| **备份优先** | 运行迁移前先备份数据库 |
-
-### 常见迁移场景
-
-#### 添加新列
-
-```python
-cursor.execute("ALTER TABLE users ADD COLUMN language VARCHAR DEFAULT 'en'")
-```
-
-#### 添加新表
-
-```python
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS new_table (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name VARCHAR NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)
-""")
-```
-
-#### 添加索引
-
-```python
-cursor.execute("CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)")
-```
+| **先检查** | 生成迁移脚本后务必检查内容，自动检测可能不完美 |
+| **备份优先** | 生产环境迁移前先备份数据库 |
+| **测试验证** | 迁移后运行测试确认无误 |
 
 ### 回滚方案
 
-如果迁移出问题，可以恢复备份：
+如果迁移出问题：
 
 ```bash
-# 停止后端
-docker compose down backend
+# 方案一：回滚迁移
+alembic downgrade -1
 
-# 恢复数据库备份
-cp ./data/supercenter.db.bak.20260615 ./data/supercenter.db
+# 方案二：恢复数据库备份
+cp ./data/supercenter.db.bak ./data/supercenter.db
 
-# 重启后端
-docker compose up -d backend
+# 方案三：恢复代码
+git checkout <部署前的commit>
+docker-compose down
+docker-compose build backend
+docker-compose up -d
 ```

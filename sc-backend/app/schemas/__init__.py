@@ -5,6 +5,7 @@ from app.schemas.user import (
     UserResponse,
     Token,
     TokenData,
+    ChangePassword,
 )
 from app.schemas.blog import (
     BlogCreate,
@@ -20,6 +21,7 @@ __all__ = [
     "UserResponse",
     "Token",
     "TokenData",
+    "ChangePassword",
     "BlogCreate",
     "BlogUpdate",
     "BlogResponse",

@@ -190,5 +190,4 @@ import EmptyState from "@/components/EmptyState";
 
 ## 相关文档
 
-- 项目详细文档：`docs/SPEC.md`
 - Next.js 官方文档：`node_modules/next/dist/docs/`

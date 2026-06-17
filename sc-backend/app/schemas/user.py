@@ -65,3 +65,9 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     """Token 载荷数据"""
     user_id: Optional[int] = None
+
+
+class ChangePassword(BaseModel):
+    """修改密码请求"""
+    old_password: str
+    new_password: str = Field(..., min_length=6, max_length=16)

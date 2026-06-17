@@ -327,15 +327,7 @@ export default function AdminConfigPage() {
 
             {/* 导航项 */}
             <div className="mb-4">
-              <div className="mb-2 flex items-center justify-between">
-                <span className="text-xs font-medium text-neutral-700">{t("admin.navItems")}</span>
-                <button
-                  onClick={addNavItem}
-                  className="text-xs text-blue-500 hover:underline"
-                >
-                  {t("admin.add")}
-                </button>
-              </div>
+              <span className="mb-2 block text-xs font-medium text-neutral-700">{t("admin.navItems")}</span>
               <div className="space-y-2">
                 {tempNavbarConfig.nav_items.map((item, index) => (
                   <div
@@ -386,20 +378,18 @@ export default function AdminConfigPage() {
                     </button>
                   </div>
                 ))}
+                <button
+                  onClick={addNavItem}
+                  className="w-full rounded border border-dashed border-neutral-300 py-1.5 text-xs text-blue-500 hover:border-blue-400 hover:bg-blue-50"
+                >
+                  {t("admin.add")}
+                </button>
               </div>
             </div>
 
             {/* 右侧链接 */}
             <div>
-              <div className="mb-2 flex items-center justify-between">
-                <span className="text-xs font-medium text-neutral-700">{t("admin.rightLinks")}</span>
-                <button
-                  onClick={addRightLink}
-                  className="text-xs text-blue-500 hover:underline"
-                >
-                  {t("admin.add")}
-                </button>
-              </div>
+              <span className="mb-2 block text-xs font-medium text-neutral-700">{t("admin.rightLinks")}</span>
               <div className="space-y-2">
                 {tempNavbarConfig.right_links.map((link, index) => (
                   <div
@@ -442,6 +432,12 @@ export default function AdminConfigPage() {
                     </button>
                   </div>
                 ))}
+                <button
+                  onClick={addRightLink}
+                  className="w-full rounded border border-dashed border-neutral-300 py-1.5 text-xs text-blue-500 hover:border-blue-400 hover:bg-blue-50"
+                >
+                  {t("admin.add")}
+                </button>
               </div>
             </div>
           </div>

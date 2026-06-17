@@ -5,6 +5,18 @@ import { useRouter } from "next/navigation";
 import type { User } from "@/types";
 import { authApi, userApi } from "@/services/api";
 
+// Cookie 工具函数
+const COOKIE_NAME = "auth_token";
+const COOKIE_MAX_AGE = 7 * 24 * 60 * 60; // 7天
+
+function setTokenCookie(token: string) {
+  document.cookie = `${COOKIE_NAME}=${token}; path=/; max-age=${COOKIE_MAX_AGE}; SameSite=Lax`;
+}
+
+function removeTokenCookie() {
+  document.cookie = `${COOKIE_NAME}=; path=/; max-age=0`;
+}
+
 interface AuthContextType {
   user: User | null;
   token: string | null;
@@ -45,6 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback(async (username: string, password: string) => {
     const response = await authApi.login(username, password);
     localStorage.setItem(TOKEN_KEY, response.access_token);
+    setTokenCookie(response.access_token);
     setToken(response.access_token);
 
     const user = await authApi.getMe(response.access_token);
@@ -54,6 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = useCallback(async (username: string, email: string, password: string) => {
     const response = await authApi.register(username, email, password);
     localStorage.setItem(TOKEN_KEY, response.access_token);
+    setTokenCookie(response.access_token);
     setToken(response.access_token);
 
     const user = await authApi.getMe(response.access_token);
@@ -62,6 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(() => {
     localStorage.removeItem(TOKEN_KEY);
+    removeTokenCookie();
     setToken(null);
     setUser(null);
     router.push("/");

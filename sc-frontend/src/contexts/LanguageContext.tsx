@@ -23,9 +23,23 @@ function getInitialLanguage(): Language {
   return stored === "zh" ? "zh" : "en";
 }
 
-export function LanguageProvider({ children }: { children: ReactNode }) {
+interface LanguageProviderProps {
+  children: ReactNode;
+  initialLanguage?: "en" | "zh";
+}
+
+export function LanguageProvider({ children, initialLanguage = "en" }: LanguageProviderProps) {
   const { user, updateUser } = useAuth();
-  const [language, setLanguageState] = useState<Language>(getInitialLanguage);
+  const [language, setLanguageState] = useState<Language>(initialLanguage);
+
+  // 客户端 hydration 后从 localStorage 同步
+  useEffect(() => {
+    const stored = localStorage.getItem(STORAGE_KEY) as Language | null;
+    if (stored && stored !== language) {
+      setLanguageState(stored);
+      document.documentElement.lang = stored;
+    }
+  }, []);
 
   // 用户登录后，从用户信息初始化语言
   useEffect(() => {

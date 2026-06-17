@@ -24,9 +24,13 @@ uv run pytest -k "test_name"  # 运行匹配用例
 # 运行数据库种子脚本（创建预置账号）
 python -m scripts.seed_db
 
-# 数据库迁移脚本
-python -m scripts.migrate_add_subtitle    # 添加 subtitle 列
-python -m scripts.migrate_add_is_deleted   # 添加软删除列
+# 数据库迁移（Alembic）
+alembic current                              # 查看当前版本
+alembic history                              # 查看迁移历史
+alembic revision --autogenerate -m "描述"     # 自动生成迁移脚本
+alembic upgrade head                         # 执行所有待执行的迁移
+alembic downgrade -1                         # 回退一个版本
+alembic stamp head                           # 标记数据库为最新版本（不执行迁移）
 ```
 
 ## 项目结构
@@ -50,6 +54,12 @@ app/
 ├── middleware/     # 中间件
 │   └── auth.py      # JWT 认证中间件
 └── database.py     # 数据库连接
+
+alembic/            # 数据库迁移（Alembic）
+├── env.py          # 迁移环境配置
+├── versions/       # 迁移版本文件
+│   ├── 001_baseline_initial_schema.py
+│   └── 002_cleanup_drop_preferred_language.py
 
 tests/              # 测试目录（TDD）
 ├── conftest.py     # pytest fixtures
@@ -183,6 +193,7 @@ python -m scripts.seed_db
 - 使用 `require_blogger` 装饰器限制博主权限
 - 博客使用软删除机制（`is_deleted` 标记），不会真正删除数据
 - 头像使用 base64 存储，直接存储 data URL 到数据库
+- **数据库迁移使用 Alembic**：修改模型后必须生成迁移脚本（`alembic revision --autogenerate`）
 
 ## TDD 开发流程
 
@@ -231,5 +242,4 @@ python -m scripts.seed_db
 
 ## 相关文档
 
-- 项目总览：`docs/SPEC.md`
 - API 文档：http://localhost:8000/docs（启动后可访问）
