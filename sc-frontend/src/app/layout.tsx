@@ -4,6 +4,7 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import FloatingAvatar from "@/components/FloatingAvatar";
 import Providers from "@/components/Providers";
+import { getUserLanguage } from "@/lib/auth";
 
 // 使用本地字体，避免Docker构建时无法访问Google Fonts的问题
 const geistSans = localFont({
@@ -25,18 +26,20 @@ export const metadata: Metadata = {
   description: "Personal website",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const language = await getUserLanguage();
+
   return (
     <html
-      lang="en"
+      lang={language}
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <Providers>
+        <Providers initialLanguage={language}>
           <div className="mx-auto w-full max-w-screen-sm px-8 md:max-w-screen-md lg:max-w-screen-lg xl:max-w-screen-2xl">
             <Navbar />
             <main className="pb-8">{children}</main>
