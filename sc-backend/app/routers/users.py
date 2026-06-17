@@ -1,10 +1,11 @@
 """用户路由"""
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, select
+from passlib.hash import argon2
 
 from app.database import get_db
 from app.models import User
-from app.schemas import UserResponse, UserUpdate
+from app.schemas import UserResponse, UserUpdate, ChangePassword
 from app.middleware.auth import get_current_user
 
 router = APIRouter(prefix="/api/users", tags=["用户"])
@@ -57,3 +58,32 @@ def update_my_profile(
     db.commit()
     db.refresh(user)
     return user
+
+
+@router.post("/change-password")
+def change_password(
+    data: ChangePassword,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """修改密码"""
+    user = db.get(User, current_user.id)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="用户不存在",
+        )
+
+    # 验证旧密码
+    if not argon2.verify(data.old_password, user.password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="旧密码错误",
+        )
+
+    # 更新密码
+    user.password_hash = argon2.hash(data.new_password)
+    db.add(user)
+    db.commit()
+
+    return {"message": "密码修改成功"}

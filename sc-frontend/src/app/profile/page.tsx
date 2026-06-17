@@ -6,7 +6,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useAuthModal } from "@/hooks/useAuthModal";
 import { useLanguage } from "@/contexts/LanguageContext";
 import PageHeader from "@/components/PageHeader";
-import { uploadApi } from "@/services/api";
+import { uploadApi, userApi } from "@/services/api";
+import { useToast } from "@/components/Toast";
 
 export default function ProfilePage() {
   const { user, token, isLoading, updateUser, logout } = useAuth();
@@ -17,6 +18,12 @@ export default function ProfilePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [message, setMessage] = useState("");
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const { showToast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isLoggingOut = useRef(false);
 
@@ -29,6 +36,16 @@ export default function ProfilePage() {
       setEmail(user.email);
     }
   }, [user, isLoading, router, openAuthModal]);
+
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && showPasswordModal) {
+        setShowPasswordModal(false);
+      }
+    };
+    window.addEventListener("keydown", handleEsc);
+    return () => window.removeEventListener("keydown", handleEsc);
+  }, [showPasswordModal]);
 
   const handleLogout = () => {
     isLoggingOut.current = true;
@@ -73,6 +90,35 @@ export default function ProfilePage() {
       setMessage(err instanceof Error ? err.message : "Update failed");
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!token) return;
+
+    if (newPassword !== confirmNewPassword) {
+      showToast(t("profile.passwordsDoNotMatch"), "error");
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      showToast(t("profile.passwordTooShort"), "error");
+      return;
+    }
+
+    setIsChangingPassword(true);
+    try {
+      await userApi.changePassword(token, oldPassword, newPassword);
+      showToast(t("profile.changePasswordSuccess"), "success");
+      setShowPasswordModal(false);
+      setOldPassword("");
+      setNewPassword("");
+      setConfirmNewPassword("");
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : t("profile.changePasswordFailed"), "error");
+    } finally {
+      setIsChangingPassword(false);
     }
   };
 
@@ -131,7 +177,7 @@ export default function ProfilePage() {
           </div>
 
           {/* User Info */}
-          <div className="mb-6 rounded bg-neutral-50 p-4">
+          <div className="mb-2 rounded bg-neutral-50 p-4">
             <div className="flex justify-between">
               <span className="text-sm text-neutral-500">{t("profile.username")}</span>
               <span className="font-medium">{user.username}</span>
@@ -142,6 +188,15 @@ export default function ProfilePage() {
                 {user.role}
               </span>
             </div>
+          </div>
+          <div className="mb-6 flex justify-end">
+            <button
+              type="button"
+              onClick={() => setShowPasswordModal(true)}
+              className="rounded-lg border border-neutral-300 px-4 py-2 text-sm text-neutral-700 transition-colors hover:bg-neutral-50"
+            >
+              {t("profile.changePassword")}
+            </button>
           </div>
 
           {/* Update Form */}
@@ -185,6 +240,83 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+
+      {/* 修改密码弹窗 */}
+      {showPasswordModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-white/60 backdrop-blur-sm"
+            onClick={() => setShowPasswordModal(false)}
+          />
+          <div className="relative w-full max-w-sm rounded-2xl bg-white p-8 shadow-2xl">
+            <h2 className="mb-6 text-center text-2xl font-semibold text-neutral-900">
+              {t("profile.changePassword")}
+            </h2>
+
+            <form onSubmit={handleChangePassword} className="space-y-5">
+              <div>
+                <label htmlFor="oldPassword" className="mb-1.5 block text-sm font-medium text-neutral-700">
+                  {t("profile.oldPassword")}
+                </label>
+                <input
+                  id="oldPassword"
+                  type="password"
+                  value={oldPassword}
+                  onChange={(e) => setOldPassword(e.target.value)}
+                  className="w-full rounded-lg border border-neutral-200 px-4 py-2.5 text-neutral-900 placeholder-neutral-400 transition-colors focus:border-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-100"
+                  required
+                />
+              </div>
+
+              <div>
+                <label htmlFor="newPassword" className="mb-1.5 block text-sm font-medium text-neutral-700">
+                  {t("profile.newPassword")}
+                </label>
+                <input
+                  id="newPassword"
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="w-full rounded-lg border border-neutral-200 px-4 py-2.5 text-neutral-900 placeholder-neutral-400 transition-colors focus:border-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-100"
+                  required
+                />
+              </div>
+
+              <div>
+                <label htmlFor="confirmNewPassword" className="mb-1.5 block text-sm font-medium text-neutral-700">
+                  {t("profile.confirmNewPassword")}
+                </label>
+                <input
+                  id="confirmNewPassword"
+                  type="password"
+                  value={confirmNewPassword}
+                  onChange={(e) => setConfirmNewPassword(e.target.value)}
+                  className="w-full rounded-lg border border-neutral-200 px-4 py-2.5 text-neutral-900 placeholder-neutral-400 transition-colors focus:border-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-100"
+                  required
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={isChangingPassword}
+                className="w-full rounded-lg bg-neutral-900 py-2.5 text-white transition-colors hover:bg-neutral-800 disabled:opacity-50"
+              >
+                {isChangingPassword ? t("profile.saving") : t("profile.changePassword")}
+              </button>
+            </form>
+
+            <button
+              type="button"
+              onClick={() => setShowPasswordModal(false)}
+              className="absolute right-4 top-4 text-neutral-400 hover:text-neutral-600 transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 }

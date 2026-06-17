@@ -93,6 +93,13 @@ export const userApi = {
       body: data,
       token,
     }),
+
+  changePassword: (token: string, oldPassword: string, newPassword: string) =>
+    request<{ message: string }>("/users/change-password", {
+      method: "POST",
+      body: { old_password: oldPassword, new_password: newPassword },
+      token,
+    }),
 };
 
 // Blog API
