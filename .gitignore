@@ -27,6 +27,7 @@ ENV/
 *.db
 *.db-shm
 *.db-wal
+*.db.bak
 *.sqlite
 
 # Docker data
