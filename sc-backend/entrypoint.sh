@@ -1,9 +1,13 @@
 #!/bin/sh
 # 后端入口脚本
 
+# 确保 Alembic 版本表存在（首次部署时自动处理已有数据库）
+echo "检查 Alembic 版本表..."
+uv run python -m scripts.ensure_alembic
+
 # 运行数据库迁移（Alembic）
 echo "运行数据库迁移..."
-uv run alembic upgrade head || true
+uv run alembic upgrade head
 
 # 运行种子脚本（创建初始用户）
 echo "执行种子数据脚本..."
