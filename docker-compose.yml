@@ -27,7 +27,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512M
+          memory: 256M  # ponytail: Next.js standalone 只需 ~200MB，匀余量给 backend
           cpus: "0.5"
 
   backend:
@@ -45,5 +45,5 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512M
+          memory: 768M  # ponytail: 图片压缩需要更多内存余量
           cpus: "0.5"
