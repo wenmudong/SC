@@ -18,6 +18,7 @@ export default function ProfilePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState<"success" | "error">("success");
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -64,8 +65,10 @@ export default function ProfilePage() {
     try {
       const result = await uploadApi.uploadAvatar(token, file);
       await updateUser({ avatar_url: result.url });
+      setMessageType("success");
       setMessage(t("profile.avatarUpdated"));
     } catch (err) {
+      setMessageType("error");
       setMessage(err instanceof Error ? err.message : "Upload failed");
     } finally {
       setIsUploadingAvatar(false);
@@ -85,8 +88,10 @@ export default function ProfilePage() {
 
     try {
       await updateUser({ email });
+      setMessageType("success");
       setMessage(t("profile.profileUpdated"));
     } catch (err) {
+      setMessageType("error");
       setMessage(err instanceof Error ? err.message : "Update failed");
     } finally {
       setIsSaving(false);
@@ -202,7 +207,7 @@ export default function ProfilePage() {
           {/* Update Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             {message && (
-              <div className={`rounded p-3 text-sm ${message.includes("success") ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"}`}>
+              <div className={`rounded p-3 text-sm ${messageType === "success" ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"}`}>
                 {message}
               </div>
             )}

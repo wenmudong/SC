@@ -1,6 +1,9 @@
 """工具路由 — 图片压缩"""
 
+import gc
 import io
+import os
+import tempfile
 import zipfile
 from pathlib import Path
 from typing import List
@@ -157,9 +160,10 @@ def compress_images(
     # 逐个校验和压缩
     used_names: set = set()
     total_size = 0
-    zip_buf = io.BytesIO()
 
-    with zipfile.ZipFile(zip_buf, "w", zipfile.ZIP_DEFLATED) as zf:
+    # ponytail: 用临时文件代替内存 zip，避免 512MB 容器 OOM
+    tmp_zip = tempfile.NamedTemporaryFile(delete=False, suffix=".zip")
+    with zipfile.ZipFile(tmp_zip, "w", zipfile.ZIP_DEFLATED) as zf:
         for file in files:
             # 校验文件类型
             if file.content_type not in ALLOWED_TYPES:
@@ -238,10 +242,27 @@ def compress_images(
             out_name = _get_unique_name(out_name, used_names)
             zf.writestr(out_name, compressed_buf.read())
 
-    # 返回 zip 流
-    zip_buf.seek(0)
+            # 释放当前图片的内存引用
+            img.close()
+            contents = None
+            original_bytes_data = None
+            compressed_buf = None
+            gc.collect()
+
+    # ponytail: 流式返回临时文件，不在内存中持有整个 zip
+    tmp_zip.seek(0)
+    tmp_path = tmp_zip.name
+
+    def iter_file():
+        try:
+            with open(tmp_path, "rb") as f:
+                while chunk := f.read(65536):
+                    yield chunk
+        finally:
+            os.unlink(tmp_path)
+
     return StreamingResponse(
-        iter([zip_buf.getvalue()]),
+        iter_file(),
         media_type="application/zip",
         headers={
             "Content-Disposition": 'attachment; filename="compressed.zip"',

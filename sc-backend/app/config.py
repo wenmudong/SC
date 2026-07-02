@@ -19,10 +19,10 @@ class Settings(BaseSettings):
     upload_dir: str = "public/uploads"
     maxAvatarSize: int = 2 * 1024 * 1024  # 2MB
 
-    # 图片压缩配置
+    # 图片压缩配置（ponytail: 2核2G 服务器适配）
     maxCompressSize: int = 20 * 1024 * 1024  # 单文件 20MB
-    maxCompressTotalSize: int = 500 * 1024 * 1024  # 总大小 500MB
-    maxCompressFiles: int = 50  # 最多 50 个文件
+    maxCompressTotalSize: int = 100 * 1024 * 1024  # 总大小 100MB（原 500MB）
+    maxCompressFiles: int = 10  # 最多 10 个文件（原 50）
 
     @property
     def cors_origins_list(self) -> list[str]:
